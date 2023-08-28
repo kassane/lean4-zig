@@ -1,4 +1,4 @@
-# lean4_zig [WiP]
+# lean4-zig
 
 Zig bindings for Lean4's C API.
 
