@@ -127,11 +127,17 @@ pub const lean_closure_object = extern struct {
 pub const lean_ref_object = extern struct {
     m_header: lean_object,
     m_value: ?*lean_object,
-}; // vendor/lean.h:195:28: warning: unsupported type: 'Atomic'
-// vendor/lean.h:193:9: warning: struct demoted to opaque type - unable to translate type of field m_value
-pub const lean_thunk_object = opaque {}; // vendor/lean.h:267:28: warning: unsupported type: 'Atomic'
-// vendor/lean.h:199:8: warning: struct demoted to opaque type - unable to translate type of field m_value
-pub const struct_lean_task = opaque {};
+};
+pub const lean_thunk_object = extern struct {
+    m_header: lean_object,
+    m_value: ?*lean_object,
+    m_closure: ?*lean_object,
+};
+pub const struct_lean_task = extern struct {
+    m_header: lean_object,
+    m_value: ?*lean_object,
+    m_imp: [*c]lean_task_imp,
+};
 pub const lean_task_imp = extern struct {
     m_closure: ?*lean_object,
     m_head_dep: ?*struct_lean_task,
@@ -271,9 +277,11 @@ pub fn lean_is_persistent(arg_o: ?*lean_object) callconv(.C) bool {
 pub fn lean_has_rc(arg_o: ?*lean_object) callconv(.C) bool {
     var o = arg_o;
     return o.?.*.m_rc != @as(c_int, 0);
-} // vendor/lean.h:417:30: warning: unsupported type: 'Atomic'
-// vendor/lean.h:417:30: warning: unsupported function proto return type
-pub const lean_get_rc_mt_addr = @compileError("unable to resolve prototype of function"); // vendor/lean.h:417:30
+}
+pub fn lean_get_rc_mt_addr(arg_o: ?*lean_object) callconv(.C) [*c]c_int {
+    var o = arg_o;
+    return &o.?.*.m_rc;
+}
 pub extern fn lean_inc_ref_cold(o: ?*lean_object) void;
 pub extern fn lean_inc_ref_n_cold(o: ?*lean_object, n: c_uint) void;
 pub fn lean_inc_ref(arg_o: ?*lean_object) callconv(.C) void {
@@ -1302,14 +1310,30 @@ pub fn lean_string_dec_lt(arg_s1: b_lean_obj_arg, arg_s2: b_lean_obj_arg) callco
     var s2 = arg_s2;
     return @as(u8, @intFromBool(lean_string_lt(s1, s2)));
 }
-pub extern fn lean_string_hash(b_lean_obj_arg) u64; // vendor/lean.h:1050:20: warning: unsupported CastKind NonAtomicToAtomic
-// vendor/lean.h:1047:28: warning: unable to translate function, demoted to extern
-pub extern fn lean_mk_thunk(arg_c: lean_obj_arg) callconv(.C) lean_obj_res; // vendor/lean.h:1059:20: warning: unsupported CastKind NonAtomicToAtomic
-// vendor/lean.h:1056:28: warning: unable to translate function, demoted to extern
-pub extern fn lean_thunk_pure(arg_v: lean_obj_arg) callconv(.C) lean_obj_res;
-pub extern fn lean_thunk_get_core(t: ?*lean_object) ?*lean_object; // vendor/lean.h:1067:23: warning: unsupported CastKind AtomicToNonAtomic
-// vendor/lean.h:1066:30: warning: unable to translate function, demoted to extern
-pub extern fn lean_thunk_get(arg_t: b_lean_obj_arg) callconv(.C) b_lean_obj_res;
+pub extern fn lean_string_hash(b_lean_obj_arg) u64;
+pub fn lean_mk_thunk(arg_c: lean_obj_arg) callconv(.C) lean_obj_res {
+    var c = arg_c;
+    var o: ?*lean_thunk_object = @as(?*lean_thunk_object, @ptrCast(@alignCast(lean_alloc_small_object(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(lean_thunk_object)))))))));
+    lean_set_st_header(@as(?*lean_object, @ptrCast(o)), @as(c_uint, @bitCast(@as(c_int, 251))), @as(c_uint, @bitCast(@as(c_int, 0))));
+    o.*.m_value = @as(?*lean_object, @ptrFromInt(@as(c_int, 0)));
+    o.*.m_closure = c;
+    return @as(?*lean_object, @ptrCast(o));
+}
+pub fn lean_thunk_pure(arg_v: lean_obj_arg) callconv(.C) lean_obj_res {
+    var v = arg_v;
+    var o: ?*lean_thunk_object = @as(?*lean_thunk_object, @ptrCast(@alignCast(lean_alloc_small_object(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(lean_thunk_object)))))))));
+    lean_set_st_header(@as(?*lean_object, @ptrCast(o)), @as(c_uint, @bitCast(@as(c_int, 251))), @as(c_uint, @bitCast(@as(c_int, 0))));
+    o.*.m_value = v;
+    o.*.m_closure = @as(?*lean_object, @ptrFromInt(@as(c_int, 0)));
+    return @as(?*lean_object, @ptrCast(o));
+}
+pub extern fn lean_thunk_get_core(t: ?*lean_object) ?*lean_object;
+pub fn lean_thunk_get(arg_t: b_lean_obj_arg) callconv(.C) b_lean_obj_res {
+    var t = arg_t;
+    var r: ?*lean_object = lean_to_thunk(t).*.m_value;
+    if (r != null) return r;
+    return lean_thunk_get_core(t);
+}
 pub fn lean_thunk_get_own(arg_t: b_lean_obj_arg) callconv(.C) lean_obj_res {
     var t = arg_t;
     var r: ?*lean_object = lean_thunk_get(t);
