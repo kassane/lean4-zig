@@ -53,12 +53,11 @@ pub const __builtin_unreachable = std.zig.c_builtins.__builtin_unreachable;
 pub const __builtin_constant_p = std.zig.c_builtins.__builtin_constant_p;
 pub const __builtin_mul_overflow = std.zig.c_builtins.__builtin_mul_overflow;
 
-pub extern fn lean_notify_assert(fileName: [*c]const u8, line: c_int, condition: [*c]const u8) void;
+pub extern fn lean_notify_assert(fileName: [*:0]const u8, line: c_int, condition: [*:0]const u8) void;
 pub fn lean_is_big_object_tag(arg_tag: u8) callconv(.C) bool {
     var tag = arg_tag;
     return (((@as(c_int, @bitCast(@as(c_uint, tag))) == @as(c_int, 246)) or (@as(c_int, @bitCast(@as(c_uint, tag))) == @as(c_int, 247))) or (@as(c_int, @bitCast(@as(c_uint, tag))) == @as(c_int, 248))) or (@as(c_int, @bitCast(@as(c_uint, tag))) == @as(c_int, 249));
 }
-pub const assertion_failed___FILE___94 = [1]u8;
 // vendor/lean.h:114:14: warning: struct demoted to opaque type - has bitfield
 // pub const lean_object = opaque{};
 
@@ -197,12 +196,12 @@ pub fn lean_get_slot_idx(arg_sz: c_uint) callconv(.C) c_uint {
     var sz = arg_sz;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(sz > @as(c_uint, @bitCast(@as(c_int, 0)))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 308), "sz > 0");
+            lean_notify_assert("src/lean.zig", @as(c_int, 308), "sz > 0");
         }
     }
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(lean_align(@as(usize, @bitCast(@as(c_ulong, sz))), @as(usize, @bitCast(@as(c_long, @as(c_int, 8))))) == @as(usize, @bitCast(@as(c_ulong, sz)))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 309), "lean_align(sz, LEAN_OBJECT_SIZE_DELTA) == sz");
+            lean_notify_assert("src/lean.zig", @as(c_int, 309), "lean_align(sz, LEAN_OBJECT_SIZE_DELTA) == sz");
         }
     }
     return (sz / @as(c_uint, @bitCast(@as(c_int, 8)))) -% @as(c_uint, @bitCast(@as(c_int, 1)));
@@ -218,7 +217,7 @@ pub fn lean_alloc_small_object(arg_sz: c_uint) callconv(.C) ?*lean_object {
     var slot_idx: c_uint = lean_get_slot_idx(sz);
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(sz <= @as(c_uint, @bitCast(@as(c_int, 4096)))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 326), "sz <= LEAN_MAX_SMALL_OBJECT_SIZE");
+            lean_notify_assert("src/lean.zig", @as(c_int, 326), "sz <= LEAN_MAX_SMALL_OBJECT_SIZE");
         }
     }
     return @as(?*lean_object, @ptrCast(lean_alloc_small(sz, slot_idx)));
@@ -229,7 +228,7 @@ pub fn lean_alloc_ctor_memory(arg_sz: c_uint) callconv(.C) ?*lean_object {
     var slot_idx: c_uint = lean_get_slot_idx(sz1);
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(sz1 <= @as(c_uint, @bitCast(@as(c_int, 4096)))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 341), "sz1 <= LEAN_MAX_SMALL_OBJECT_SIZE");
+            lean_notify_assert("src/lean.zig", @as(c_int, 341), "sz1 <= LEAN_MAX_SMALL_OBJECT_SIZE");
         }
     }
     var r: ?*lean_object = @as(?*lean_object, @ptrCast(lean_alloc_small(sz1, slot_idx)));
@@ -379,7 +378,7 @@ pub fn lean_to_ctor(arg_o: ?*lean_object) callconv(.C) ?*lean_ctor_object {
     var o = arg_o;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_ctor(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 471), "lean_is_ctor(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 471), "lean_is_ctor(o)");
         }
     }
     return @as(?*lean_ctor_object, @ptrCast(@alignCast(o)));
@@ -388,7 +387,7 @@ pub fn lean_to_closure(arg_o: ?*lean_object) callconv(.C) ?*lean_closure_object 
     var o = arg_o;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_closure(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 472), "lean_is_closure(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 472), "lean_is_closure(o)");
         }
     }
     return @as(?*lean_closure_object, @ptrCast(@alignCast(o)));
@@ -397,7 +396,7 @@ pub fn lean_to_array(arg_o: ?*lean_object) callconv(.C) ?*lean_array_object {
     var o = arg_o;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_array(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 473), "lean_is_array(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 473), "lean_is_array(o)");
         }
     }
     return @as(?*lean_array_object, @ptrCast(@alignCast(o)));
@@ -406,7 +405,7 @@ pub fn lean_to_sarray(arg_o: ?*lean_object) callconv(.C) ?*lean_sarray_object {
     var o = arg_o;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_sarray(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 474), "lean_is_sarray(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 474), "lean_is_sarray(o)");
         }
     }
     return @as(?*lean_sarray_object, @ptrCast(@alignCast(o)));
@@ -415,7 +414,7 @@ pub fn lean_to_string(arg_o: ?*lean_object) callconv(.C) ?*lean_string_object {
     var o = arg_o;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_string(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 475), "lean_is_string(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 475), "lean_is_string(o)");
         }
     }
     return @as(?*lean_string_object, @ptrCast(@alignCast(o)));
@@ -424,7 +423,7 @@ pub fn lean_to_thunk(arg_o: ?*lean_object) callconv(.C) ?*lean_thunk_object {
     var o = arg_o;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_thunk(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 476), "lean_is_thunk(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 476), "lean_is_thunk(o)");
         }
     }
     return @as(?*lean_thunk_object, @ptrCast(@alignCast(o)));
@@ -433,7 +432,7 @@ pub fn lean_to_task(arg_o: ?*lean_object) callconv(.C) ?*lean_task_object {
     var o = arg_o;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_task(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 477), "lean_is_task(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 477), "lean_is_task(o)");
         }
     }
     return @as(?*lean_task_object, @ptrCast(@alignCast(o)));
@@ -442,7 +441,7 @@ pub fn lean_to_ref(arg_o: ?*lean_object) callconv(.C) ?*lean_ref_object {
     var o = arg_o;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_ref(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 478), "lean_is_ref(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 478), "lean_is_ref(o)");
         }
     }
     return @as(?*lean_ref_object, @ptrCast(@alignCast(o)));
@@ -451,7 +450,7 @@ pub fn lean_to_external(arg_o: ?*lean_object) callconv(.C) ?*lean_external_objec
     var o = arg_o;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_external(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 479), "lean_is_external(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 479), "lean_is_external(o)");
         }
     }
     return @as(?*lean_external_object, @ptrCast(@alignCast(o)));
@@ -483,7 +482,7 @@ pub fn lean_set_st_header(arg_o: ?*lean_object, arg_tag: c_uint, arg_other: c_ui
     o.?.*.m_rc = 1;
     o.?.*.m_tag = tag;
     o.?.*.m_other = other;
-    o.*.m_cs_sz = 0;
+    o.?.*.m_cs_sz = 0;
 }
 pub fn lean_set_non_heap_header(arg_o: ?*lean_object, arg_sz: usize, arg_tag: c_uint, arg_other: c_uint) callconv(.C) void {
     var o = arg_o;
@@ -492,23 +491,23 @@ pub fn lean_set_non_heap_header(arg_o: ?*lean_object, arg_sz: usize, arg_tag: c_
     var other = arg_other;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(sz > @as(usize, @bitCast(@as(c_long, @as(c_int, 0))))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 510), "sz > 0");
+            lean_notify_assert("src/lean.zig", @as(c_int, 510), "sz > 0");
         }
     }
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(@as(c_ulonglong, @bitCast(@as(c_ulonglong, sz))) < (@as(c_ulonglong, 1) << @intCast(16))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 511), "sz < (1ull << 16)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 511), "sz < (1ull << 16)");
         }
     }
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!((sz == @as(usize, @bitCast(@as(c_long, @as(c_int, 1))))) or !lean_is_big_object_tag(@as(u8, @bitCast(@as(u8, @truncate(tag)))))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 512), "sz == 1 || !lean_is_big_object_tag(tag)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 512), "sz == 1 || !lean_is_big_object_tag(tag)");
         }
     }
     o.?.*.m_rc = 0;
     o.?.*.m_tag = tag;
     o.?.*.m_other = other;
-    o.*.m_cs_sz = @as(c_uint, @bitCast(@as(c_uint, @truncate(sz))));
+    o.?.*.m_cs_sz = @as(c_uint, @bitCast(@as(c_uint, @truncate(sz))));
 }
 pub fn lean_set_non_heap_header_for_big(arg_o: ?*lean_object, arg_tag: c_uint, arg_other: c_uint) callconv(.C) void {
     var o = arg_o;
@@ -520,7 +519,7 @@ pub fn lean_ctor_num_objs(arg_o: ?*lean_object) callconv(.C) c_uint {
     var o = arg_o;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_ctor(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 527), "lean_is_ctor(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 527), "lean_is_ctor(o)");
         }
     }
     return lean_ptr_other(o);
@@ -529,7 +528,7 @@ pub fn lean_ctor_obj_cptr(arg_o: ?*lean_object) callconv(.C) [*c]?*lean_object {
     var o = arg_o;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_ctor(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 532), "lean_is_ctor(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 532), "lean_is_ctor(o)");
         }
     }
     return lean_to_ctor(o).*.m_objs();
@@ -538,7 +537,7 @@ pub fn lean_ctor_scalar_cptr(arg_o: ?*lean_object) callconv(.C) [*c]u8 {
     var o = arg_o;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_ctor(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 537), "lean_is_ctor(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 537), "lean_is_ctor(o)");
         }
     }
     return @as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o) + lean_ctor_num_objs(o))));
@@ -549,7 +548,7 @@ pub fn lean_alloc_ctor(arg_tag: c_uint, arg_num_objs: c_uint, arg_scalar_sz: c_u
     var scalar_sz = arg_scalar_sz;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(((tag <= @as(c_uint, @bitCast(@as(c_int, 244)))) and (num_objs < @as(c_uint, @bitCast(@as(c_int, 256))))) and (scalar_sz < @as(c_uint, @bitCast(@as(c_int, 1024))))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 542), "tag <= LeanMaxCtorTag && num_objs < LEAN_MAX_CTOR_FIELDS && scalar_sz < LEAN_MAX_CTOR_SCALARS_SIZE");
+            lean_notify_assert("src/lean.zig", @as(c_int, 542), "tag <= LeanMaxCtorTag && num_objs < LEAN_MAX_CTOR_FIELDS && scalar_sz < LEAN_MAX_CTOR_SCALARS_SIZE");
         }
     }
     var o: ?*lean_object = lean_alloc_ctor_memory(@as(c_uint, @bitCast(@as(c_uint, @truncate((@sizeOf(lean_ctor_object) +% (@sizeOf(?*anyopaque) *% @as(c_ulong, @bitCast(@as(c_ulong, num_objs))))) +% @as(c_ulong, @bitCast(@as(c_ulong, scalar_sz))))))));
@@ -561,7 +560,7 @@ pub fn lean_ctor_get(arg_o: b_lean_obj_arg, arg_i: c_uint) callconv(.C) b_lean_o
     var i = arg_i;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(i < lean_ctor_num_objs(o)))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 549), "i < lean_ctor_num_objs(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 549), "i < lean_ctor_num_objs(o)");
         }
     }
     return lean_ctor_obj_cptr(o)[i];
@@ -572,7 +571,7 @@ pub fn lean_ctor_set(arg_o: b_lean_obj_arg, arg_i: c_uint, arg_v: lean_obj_arg) 
     var v = arg_v;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(i < lean_ctor_num_objs(o)))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 554), "i < lean_ctor_num_objs(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 554), "i < lean_ctor_num_objs(o)");
         }
     }
     lean_ctor_obj_cptr(o)[i] = v;
@@ -582,7 +581,7 @@ pub fn lean_ctor_set_tag(arg_o: b_lean_obj_arg, arg_new_tag: u8) callconv(.C) vo
     var new_tag = arg_new_tag;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(@as(c_int, @bitCast(@as(c_uint, new_tag))) <= @as(c_int, 244)))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 559), "new_tag <= LeanMaxCtorTag");
+            lean_notify_assert("src/lean.zig", @as(c_int, 559), "new_tag <= LeanMaxCtorTag");
         }
     }
     o.?.*.m_tag = @as(c_uint, @bitCast(@as(c_uint, new_tag)));
@@ -592,7 +591,7 @@ pub fn lean_ctor_release(arg_o: b_lean_obj_arg, arg_i: c_uint) callconv(.C) void
     var i = arg_i;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(i < lean_ctor_num_objs(o)))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 564), "i < lean_ctor_num_objs(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 564), "i < lean_ctor_num_objs(o)");
         }
     }
     var objs: [*c]?*lean_object = lean_ctor_obj_cptr(o);
@@ -604,7 +603,7 @@ pub fn lean_ctor_get_usize(arg_o: b_lean_obj_arg, arg_i: c_uint) callconv(.C) us
     var i = arg_i;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(i >= lean_ctor_num_objs(o)))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 571), "i >= lean_ctor_num_objs(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 571), "i >= lean_ctor_num_objs(o)");
         }
     }
     return @as([*c]usize, @ptrCast(@alignCast(lean_ctor_obj_cptr(o) + i))).*;
@@ -614,7 +613,7 @@ pub fn lean_ctor_get_uint8(arg_o: b_lean_obj_arg, arg_offset: c_uint) callconv(.
     var offset = arg_offset;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(@as(c_ulong, @bitCast(@as(c_ulong, offset))) >= (@as(c_ulong, @bitCast(@as(c_ulong, lean_ctor_num_objs(o)))) *% @sizeOf(?*anyopaque))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 576), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 576), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
         }
     }
     return (@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset).*;
@@ -624,7 +623,7 @@ pub fn lean_ctor_get_uint16(arg_o: b_lean_obj_arg, arg_offset: c_uint) callconv(
     var offset = arg_offset;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(@as(c_ulong, @bitCast(@as(c_ulong, offset))) >= (@as(c_ulong, @bitCast(@as(c_ulong, lean_ctor_num_objs(o)))) *% @sizeOf(?*anyopaque))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 581), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 581), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
         }
     }
     return @as([*c]u16, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).*;
@@ -634,7 +633,7 @@ pub fn lean_ctor_get_uint32(arg_o: b_lean_obj_arg, arg_offset: c_uint) callconv(
     var offset = arg_offset;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(@as(c_ulong, @bitCast(@as(c_ulong, offset))) >= (@as(c_ulong, @bitCast(@as(c_ulong, lean_ctor_num_objs(o)))) *% @sizeOf(?*anyopaque))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 586), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 586), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
         }
     }
     return @as([*c]u32, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).*;
@@ -644,7 +643,7 @@ pub fn lean_ctor_get_uint64(arg_o: b_lean_obj_arg, arg_offset: c_uint) callconv(
     var offset = arg_offset;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(@as(c_ulong, @bitCast(@as(c_ulong, offset))) >= (@as(c_ulong, @bitCast(@as(c_ulong, lean_ctor_num_objs(o)))) *% @sizeOf(?*anyopaque))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 591), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 591), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
         }
     }
     return @as([*c]u64, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).*;
@@ -654,7 +653,7 @@ pub fn lean_ctor_get_float(arg_o: b_lean_obj_arg, arg_offset: c_uint) callconv(.
     var offset = arg_offset;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(@as(c_ulong, @bitCast(@as(c_ulong, offset))) >= (@as(c_ulong, @bitCast(@as(c_ulong, lean_ctor_num_objs(o)))) *% @sizeOf(?*anyopaque))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 596), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 596), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
         }
     }
     return @as([*c]f64, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).*;
@@ -665,7 +664,7 @@ pub fn lean_ctor_set_usize(arg_o: b_lean_obj_arg, arg_i: c_uint, arg_v: usize) c
     var v = arg_v;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(i >= lean_ctor_num_objs(o)))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 601), "i >= lean_ctor_num_objs(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 601), "i >= lean_ctor_num_objs(o)");
         }
     }
     @as([*c]usize, @ptrCast(@alignCast(lean_ctor_obj_cptr(o) + i))).* = v;
@@ -676,7 +675,7 @@ pub fn lean_ctor_set_uint8(arg_o: b_lean_obj_arg, arg_offset: c_uint, arg_v: u8)
     var v = arg_v;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(@as(c_ulong, @bitCast(@as(c_ulong, offset))) >= (@as(c_ulong, @bitCast(@as(c_ulong, lean_ctor_num_objs(o)))) *% @sizeOf(?*anyopaque))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 606), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 606), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
         }
     }
     (@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset).* = v;
@@ -687,7 +686,7 @@ pub fn lean_ctor_set_uint16(arg_o: b_lean_obj_arg, arg_offset: c_uint, arg_v: u1
     var v = arg_v;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(@as(c_ulong, @bitCast(@as(c_ulong, offset))) >= (@as(c_ulong, @bitCast(@as(c_ulong, lean_ctor_num_objs(o)))) *% @sizeOf(?*anyopaque))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 611), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 611), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
         }
     }
     @as([*c]u16, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).* = v;
@@ -698,7 +697,7 @@ pub fn lean_ctor_set_uint32(arg_o: b_lean_obj_arg, arg_offset: c_uint, arg_v: u3
     var v = arg_v;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(@as(c_ulong, @bitCast(@as(c_ulong, offset))) >= (@as(c_ulong, @bitCast(@as(c_ulong, lean_ctor_num_objs(o)))) *% @sizeOf(?*anyopaque))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 616), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 616), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
         }
     }
     @as([*c]u32, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).* = v;
@@ -709,7 +708,7 @@ pub fn lean_ctor_set_uint64(arg_o: b_lean_obj_arg, arg_offset: c_uint, arg_v: u6
     var v = arg_v;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(@as(c_ulong, @bitCast(@as(c_ulong, offset))) >= (@as(c_ulong, @bitCast(@as(c_ulong, lean_ctor_num_objs(o)))) *% @sizeOf(?*anyopaque))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 621), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 621), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
         }
     }
     @as([*c]u64, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).* = v;
@@ -720,7 +719,7 @@ pub fn lean_ctor_set_float(arg_o: b_lean_obj_arg, arg_offset: c_uint, arg_v: f64
     var v = arg_v;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(@as(c_ulong, @bitCast(@as(c_ulong, offset))) >= (@as(c_ulong, @bitCast(@as(c_ulong, lean_ctor_num_objs(o)))) *% @sizeOf(?*anyopaque))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 626), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 626), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
         }
     }
     @as([*c]f64, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).* = v;
@@ -747,19 +746,19 @@ pub fn lean_alloc_closure(arg_fun: ?*anyopaque, arg_arity: c_uint, arg_num_fixed
     var num_fixed = arg_num_fixed;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(arity > @as(c_uint, @bitCast(@as(c_int, 0)))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 637), "arity > 0");
+            lean_notify_assert("src/lean.zig", @as(c_int, 637), "arity > 0");
         }
     }
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(num_fixed < arity))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 638), "num_fixed < arity");
+            lean_notify_assert("src/lean.zig", @as(c_int, 638), "num_fixed < arity");
         }
     }
     var o: ?*lean_closure_object = @as(?*lean_closure_object, @ptrCast(@alignCast(lean_alloc_small_object(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(lean_closure_object) +% (@sizeOf(?*anyopaque) *% @as(c_ulong, @bitCast(@as(c_ulong, num_fixed))))))))))));
     lean_set_st_header(@as(?*lean_object, @ptrCast(o)), @as(c_uint, @bitCast(@as(c_int, 245))), @as(c_uint, @bitCast(@as(c_int, 0))));
-    o.*.m_fun = fun;
-    o.*.m_arity = @as(u16, @bitCast(@as(c_ushort, @truncate(arity))));
-    o.*.m_num_fixed = @as(u16, @bitCast(@as(c_ushort, @truncate(num_fixed))));
+    o.?.*.m_fun = fun;
+    o.?.*.m_arity = @as(u16, @bitCast(@as(c_ushort, @truncate(arity))));
+    o.?.*.m_num_fixed = @as(u16, @bitCast(@as(c_ushort, @truncate(num_fixed))));
     return @as(?*lean_object, @ptrCast(o));
 }
 pub fn lean_closure_get(arg_o: b_lean_obj_arg, arg_i: c_uint) callconv(.C) b_lean_obj_res {
@@ -767,7 +766,7 @@ pub fn lean_closure_get(arg_o: b_lean_obj_arg, arg_i: c_uint) callconv(.C) b_lea
     var i = arg_i;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(i < lean_closure_num_fixed(o)))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 647), "i < lean_closure_num_fixed(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 647), "i < lean_closure_num_fixed(o)");
         }
     }
     return lean_to_closure(o).*.m_objs()[i];
@@ -778,7 +777,7 @@ pub fn lean_closure_set(arg_o: u_lean_obj_arg, arg_i: c_uint, arg_a: lean_obj_ar
     var a = arg_a;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(i < lean_closure_num_fixed(o)))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 651), "i < lean_closure_num_fixed(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 651), "i < lean_closure_num_fixed(o)");
         }
     }
     lean_to_closure(o).*.m_objs()[i] = a;
@@ -806,8 +805,8 @@ pub fn lean_alloc_array(arg_size: usize, arg_capacity: usize) callconv(.C) lean_
     var capacity = arg_capacity;
     var o: ?*lean_array_object = @as(?*lean_array_object, @ptrCast(@alignCast(lean_alloc_object(@sizeOf(lean_array_object) +% (@sizeOf(?*anyopaque) *% capacity)))));
     lean_set_st_header(@as(?*lean_object, @ptrCast(o)), @as(c_uint, @bitCast(@as(c_int, 246))), @as(c_uint, @bitCast(@as(c_int, 0))));
-    o.*.m_size = size;
-    o.*.m_capacity = capacity;
+    o.?.*.m_size = size;
+    o.?.*.m_capacity = capacity;
     return @as(?*lean_object, @ptrCast(o));
 }
 pub fn lean_array_size(arg_o: b_lean_obj_arg) callconv(.C) usize {
@@ -831,17 +830,17 @@ pub fn lean_array_set_size(arg_o: u_lean_obj_arg, arg_sz: usize) callconv(.C) vo
     var sz = arg_sz;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_array(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 690), "lean_is_array(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 690), "lean_is_array(o)");
         }
     }
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_exclusive(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 691), "lean_is_exclusive(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 691), "lean_is_exclusive(o)");
         }
     }
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(sz <= lean_array_capacity(o)))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 692), "sz <= lean_array_capacity(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 692), "sz <= lean_array_capacity(o)");
         }
     }
     lean_to_array(o).*.m_size = sz;
@@ -851,7 +850,7 @@ pub fn lean_array_get_core(arg_o: b_lean_obj_arg, arg_i: usize) callconv(.C) b_l
     var i = arg_i;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(i < lean_array_size(o)))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 696), "i < lean_array_size(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 696), "i < lean_array_size(o)");
         }
     }
     return lean_to_array(o).*.m_data()[i];
@@ -862,12 +861,12 @@ pub fn lean_array_set_core(arg_o: u_lean_obj_arg, arg_i: usize, arg_v: lean_obj_
     var v = arg_v;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(!lean_has_rc(o) or (@as(c_int, @intFromBool(lean_is_exclusive(o))) != 0)))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 702), "!lean_has_rc(o) || lean_is_exclusive(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 702), "!lean_has_rc(o) || lean_is_exclusive(o)");
         }
     }
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(i < lean_array_size(o)))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 703), "i < lean_array_size(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 703), "i < lean_array_size(o)");
         }
     }
     lean_to_array(o).*.m_data()[i] = v;
@@ -1005,15 +1004,15 @@ pub fn lean_alloc_sarray(arg_elem_size: c_uint, arg_size: usize, arg_capacity: u
     var capacity = arg_capacity;
     var o: ?*lean_sarray_object = @as(?*lean_sarray_object, @ptrCast(@alignCast(lean_alloc_object(@sizeOf(lean_sarray_object) +% (@as(usize, @bitCast(@as(c_ulong, elem_size))) *% capacity)))));
     lean_set_st_header(@as(?*lean_object, @ptrCast(o)), @as(c_uint, @bitCast(@as(c_int, 248))), elem_size);
-    o.*.m_size = size;
-    o.*.m_capacity = capacity;
+    o.?.*.m_size = size;
+    o.?.*.m_capacity = capacity;
     return @as(?*lean_object, @ptrCast(o));
 }
 pub fn lean_sarray_elem_size(arg_o: ?*lean_object) callconv(.C) c_uint {
     var o = arg_o;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_sarray(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 837), "lean_is_sarray(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 837), "lean_is_sarray(o)");
         }
     }
     return lean_ptr_other(o);
@@ -1035,12 +1034,12 @@ pub fn lean_sarray_set_size(arg_o: u_lean_obj_arg, arg_sz: usize) callconv(.C) v
     var sz = arg_sz;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_exclusive(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 846), "lean_is_exclusive(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 846), "lean_is_exclusive(o)");
         }
     }
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(sz <= lean_sarray_capacity(o)))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 847), "sz <= lean_sarray_capacity(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 847), "sz <= lean_sarray_capacity(o)");
         }
     }
     lean_to_sarray(o).*.m_size = sz;
@@ -1069,7 +1068,7 @@ pub fn lean_byte_array_uget(arg_a: b_lean_obj_arg, arg_i: usize) callconv(.C) u8
     var i = arg_i;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(i < lean_sarray_size(a)))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 870), "i < lean_sarray_size(a)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 870), "i < lean_sarray_size(a)");
         }
     }
     return lean_sarray_cptr(a)[i];
@@ -1209,9 +1208,9 @@ pub fn lean_alloc_string(arg_size: usize, arg_capacity: usize, arg_len: usize) c
     var len = arg_len;
     var o: ?*lean_string_object = @as(?*lean_string_object, @ptrCast(@alignCast(lean_alloc_object(@sizeOf(lean_string_object) +% capacity))));
     lean_set_st_header(@as(?*lean_object, @ptrCast(o)), @as(c_uint, @bitCast(@as(c_int, 249))), @as(c_uint, @bitCast(@as(c_int, 0))));
-    o.*.m_size = size;
-    o.*.m_capacity = capacity;
-    o.*.m_length = len;
+    o.?.*.m_size = size;
+    o.?.*.m_capacity = capacity;
+    o.?.*.m_length = len;
     return @as(?*lean_object, @ptrCast(o));
 }
 pub extern fn lean_utf8_strlen(str: [*c]const u8) usize;
@@ -1233,7 +1232,7 @@ pub fn lean_string_cstr(arg_o: b_lean_obj_arg) callconv(.C) [*c]const u8 {
     var o = arg_o;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_string(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 998), "lean_is_string(o)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 998), "lean_is_string(o)");
         }
     }
     return lean_to_string(o).*.m_data();
@@ -1315,16 +1314,16 @@ pub fn lean_mk_thunk(arg_c: lean_obj_arg) callconv(.C) lean_obj_res {
     var c = arg_c;
     var o: ?*lean_thunk_object = @as(?*lean_thunk_object, @ptrCast(@alignCast(lean_alloc_small_object(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(lean_thunk_object)))))))));
     lean_set_st_header(@as(?*lean_object, @ptrCast(o)), @as(c_uint, @bitCast(@as(c_int, 251))), @as(c_uint, @bitCast(@as(c_int, 0))));
-    o.*.m_value = @as(?*lean_object, @ptrFromInt(@as(c_int, 0)));
-    o.*.m_closure = c;
+    o.?.*.m_value = @as(?*lean_object, @ptrFromInt(@as(c_int, 0)));
+    o.?.*.m_closure = c;
     return @as(?*lean_object, @ptrCast(o));
 }
 pub fn lean_thunk_pure(arg_v: lean_obj_arg) callconv(.C) lean_obj_res {
     var v = arg_v;
     var o: ?*lean_thunk_object = @as(?*lean_thunk_object, @ptrCast(@alignCast(lean_alloc_small_object(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(lean_thunk_object)))))))));
     lean_set_st_header(@as(?*lean_object, @ptrCast(o)), @as(c_uint, @bitCast(@as(c_int, 251))), @as(c_uint, @bitCast(@as(c_int, 0))));
-    o.*.m_value = v;
-    o.*.m_closure = @as(?*lean_object, @ptrFromInt(@as(c_int, 0)));
+    o.?.*.m_value = v;
+    o.?.*.m_closure = @as(?*lean_object, @ptrFromInt(@as(c_int, 0)));
     return @as(?*lean_object, @ptrCast(o));
 }
 pub extern fn lean_thunk_get_core(t: ?*lean_object) ?*lean_object;
@@ -1381,17 +1380,17 @@ pub fn lean_alloc_external(arg_cls: [*c]lean_external_class, arg_data: ?*anyopaq
     var data = arg_data;
     var o: ?*lean_external_object = @as(?*lean_external_object, @ptrCast(@alignCast(lean_alloc_small_object(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(lean_external_object)))))))));
     lean_set_st_header(@as(?*lean_object, @ptrCast(o)), @as(c_uint, @bitCast(@as(c_int, 254))), @as(c_uint, @bitCast(@as(c_int, 0))));
-    o.*.m_class = cls;
-    o.*.m_data = data;
+    o.?.*.m_class = cls;
+    o.?.*.m_data = data;
     return @as(?*lean_object, @ptrCast(o));
 }
 pub fn lean_get_external_class(arg_o: ?*lean_object) callconv(.C) [*c]lean_external_class {
     var o = arg_o;
-    return lean_to_external(o).*.m_class;
+    return lean_to_external(o).?.*.m_class;
 }
 pub fn lean_get_external_data(arg_o: ?*lean_object) callconv(.C) ?*anyopaque {
     var o = arg_o;
-    return lean_to_external(o).*.m_data;
+    return lean_to_external(o).?.*.m_data;
 }
 pub extern fn lean_nat_big_succ(a: ?*lean_object) ?*lean_object;
 pub extern fn lean_nat_big_add(a1: ?*lean_object, a2: ?*lean_object) ?*lean_object;
@@ -1597,7 +1596,7 @@ pub fn lean_scalar_to_int64(arg_a: b_lean_obj_arg) callconv(.C) i64 {
     var a = arg_a;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_scalar(a))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 1345), "lean_is_scalar(a)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 1345), "lean_is_scalar(a)");
         }
     }
     if (@sizeOf(?*anyopaque) == @as(c_ulong, @bitCast(@as(c_long, @as(c_int, 8))))) return @as(i64, @bitCast(@as(c_long, @as(c_int, @bitCast(@as(c_uint, @bitCast(@as(c_uint, @truncate(lean_unbox(a)))))))))) else return @as(i64, @bitCast(@as(c_long, @as(c_int, @bitCast(@as(c_uint, @truncate(@as(usize, @intCast(@intFromPtr(a))))))) >> @intCast(1))));
@@ -1607,7 +1606,7 @@ pub fn lean_scalar_to_int(arg_a: b_lean_obj_arg) callconv(.C) c_int {
     var a = arg_a;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_scalar(a))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 1353), "lean_is_scalar(a)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 1353), "lean_is_scalar(a)");
         }
     }
     if (@sizeOf(?*anyopaque) == @as(c_ulong, @bitCast(@as(c_long, @as(c_int, 8))))) return @as(c_int, @bitCast(@as(c_uint, @bitCast(@as(c_uint, @truncate(lean_unbox(a))))))) else return @as(c_int, @bitCast(@as(c_uint, @truncate(@as(usize, @intCast(@intFromPtr(a))))))) >> @intCast(1);
@@ -1747,7 +1746,7 @@ pub fn lean_int_to_nat(arg_a: lean_obj_arg) callconv(.C) lean_obj_res {
     var a = arg_a;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!!lean_int_lt(a, lean_box(@as(usize, @bitCast(@as(c_long, @as(c_int, 0)))))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 1489), "!lean_int_lt(a, lean_box(0))");
+            lean_notify_assert("src/lean.zig", @as(c_int, 1489), "!lean_int_lt(a, lean_box(0))");
         }
     }
     if (lean_is_scalar(a)) {
@@ -2448,7 +2447,7 @@ pub fn lean_io_result_get_value(arg_r: b_lean_obj_arg) callconv(.C) b_lean_obj_r
     var r = arg_r;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_io_result_is_ok(r))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 1827), "lean_io_result_is_ok(r)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 1827), "lean_io_result_is_ok(r)");
         }
     }
     return lean_ctor_get(r, @as(c_uint, @bitCast(@as(c_int, 0))));
@@ -2457,7 +2456,7 @@ pub fn lean_io_result_get_error(arg_r: b_lean_obj_arg) callconv(.C) b_lean_obj_r
     var r = arg_r;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_io_result_is_error(r))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 1828), "lean_io_result_is_error(r)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 1828), "lean_io_result_is_error(r)");
         }
     }
     return lean_ctor_get(r, @as(c_uint, @bitCast(@as(c_int, 0))));
@@ -2517,7 +2516,7 @@ pub fn lean_name_hash_ptr(arg_n: b_lean_obj_arg) callconv(.C) u64 {
     var n = arg_n;
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!!lean_is_scalar(n))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
-            lean_notify_assert("vendor/lean.h", @as(c_int, 1885), "!lean_is_scalar(n)");
+            lean_notify_assert("src/lean.zig", @as(c_int, 1885), "!lean_is_scalar(n)");
         }
     }
     return lean_ctor_get_uint64(n, @as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(?*lean_object) *% @as(c_ulong, @bitCast(@as(c_long, @as(c_int, 2)))))))));

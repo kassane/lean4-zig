@@ -1,6 +1,6 @@
 const std = @import("std");
 
-pub fn build(b: *std.Build) void {
+pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
@@ -10,11 +10,19 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    exe.addLibraryPath(.{ .path = "vendor/reverse-ffi/out" });
+    exe.addLibraryPath(.{ .path = "vendor/reverse-ffi/lib/build/lib" });
+    exe.addLibraryPath(.{
+        .path = b.pathJoin(
+            &.{
+                try lean4prefix(b),
+                "lib/lean",
+            },
+        ),
+    });
+    exe.step.dependOn(&lakeBuild(b).step);
     exe.linkSystemLibrary("RFFI");
     exe.linkSystemLibrary("leanshared");
     exe.linkLibC();
-    exe.step.dependOn(&buildlib(b).step);
 
     b.installArtifact(exe);
 
@@ -27,11 +35,24 @@ pub fn build(b: *std.Build) void {
     run_step.dependOn(&run_cmd.step);
 }
 
-fn buildlib(b: *std.Build) *std.Build.Step.Run {
+fn lakeBuild(b: *std.Build) *std.Build.Step.Run {
+    const lake = b.findProgram(&.{"lake"}, &.{}) catch @panic("lake not found!");
     const run = b.addSystemCommand(&.{
-        "lake",
+        lake,
         "--dir=vendor/reverse-ffi/lib",
         "build",
     });
     return run;
+}
+fn lean4prefix(b: *std.Build) ![]const u8 {
+    const lean = try b.findProgram(&.{"lean"}, &.{});
+    const run = try std.ChildProcess.exec(.{
+        .allocator = b.allocator,
+        .argv = &.{
+            lean,
+            "--print-prefix",
+        },
+    });
+    var out = std.mem.split(u8, run.stdout, "\n"); // remove newline
+    return out.first();
 }
