@@ -4,13 +4,35 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const exe = b.addExecutable(.{
-        .name = "lean4-zig",
-        .root_source_file = .{ .path = "src/main.zig" },
-        .target = target,
-        .optimize = optimize,
+    _ = b.addModule("lean4", .{
+        .source_file = .{
+            .path = "src/c.zig",
+        },
     });
-    exe.addLibraryPath(.{ .path = "vendor/reverse-ffi/lib/build/lib" });
+    lean4FFI(b);
+    try reverseFFI(b, .{ target, optimize });
+}
+
+fn lean4FFI(b: *std.Build) void {
+    const run = b.addSystemCommand(&.{
+        "examples/ffi/app/build/bin/app",
+    });
+    run.step.dependOn(&lakeBuild(b, "examples/ffi/app").step);
+    const run_cmd = b.step("zffi", "run zig-lib on lean4-app");
+    run_cmd.dependOn(&run.step);
+}
+
+fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.OptimizeMode }) !void {
+    const exe = b.addExecutable(.{
+        .name = "reverse-ffi",
+        .root_source_file = .{ .path = "examples/reverse-ffi/app/app.zig" },
+        .target = info[0],
+        .optimize = info[1],
+    });
+    exe.addModule("lean4", b.modules.get("lean4").?);
+    exe.addLibraryPath(.{ .path = "examples/reverse-ffi/lib/build/lib" });
+    if (exe.target.isDarwin())
+        exe.addLibraryPath(.{ .path = "/usr/local/lib" });
     exe.addLibraryPath(.{
         .path = b.pathJoin(
             &.{
@@ -19,7 +41,7 @@ pub fn build(b: *std.Build) !void {
             },
         ),
     });
-    exe.step.dependOn(&lakeBuild(b).step);
+    exe.step.dependOn(&lakeBuild(b, "examples/reverse-ffi/lib").step);
     exe.linkSystemLibrary("RFFI");
     exe.linkSystemLibrary("leanshared");
     exe.linkLibC();
@@ -31,19 +53,20 @@ pub fn build(b: *std.Build) !void {
     if (b.args) |args| {
         run_cmd.addArgs(args);
     }
-    const run_step = b.step("run", b.fmt("Run the {s} app", .{exe.name}));
+    const run_step = b.step("rffi", b.fmt("Run the {s} app", .{exe.name}));
     run_step.dependOn(&run_cmd.step);
 }
 
-fn lakeBuild(b: *std.Build) *std.Build.Step.Run {
+fn lakeBuild(b: *std.Build, path: []const u8) *std.Build.Step.Run {
     const lake = b.findProgram(&.{"lake"}, &.{}) catch @panic("lake not found!");
     const run = b.addSystemCommand(&.{
         lake,
-        "--dir=vendor/reverse-ffi/lib",
+        b.fmt("--dir={s}", .{path}),
         "build",
     });
     return run;
 }
+
 fn lean4prefix(b: *std.Build) ![]const u8 {
     const lean = try b.findProgram(&.{"lean"}, &.{});
     const run = try std.ChildProcess.exec(.{

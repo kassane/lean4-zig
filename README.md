@@ -12,8 +12,16 @@ Functions and comments manually translated from those in the [`lean.h` header](h
 
 ### How to run
 
+- **FFI**
+```bash
+# default: reverse ffi (zig lib => lean4 app)
+$> zig build ffi
+# output: 3
+```
+
+- **Reverse-FFI**
 ```bash
 # default: reverse ffi (lean4 lib => zig app)
-$> zig build run
+$> zig build rffi
 # output: 6
 ```

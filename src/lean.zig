@@ -231,7 +231,9 @@ pub fn lean_alloc_ctor_memory(arg_sz: c_uint) callconv(.C) ?*lean_object {
             lean_notify_assert("src/lean.zig", @as(c_int, 341), "sz1 <= LEAN_MAX_SMALL_OBJECT_SIZE");
         }
     }
-    var r: ?*lean_object = @as(?*lean_object, @ptrCast(lean_alloc_small(sz1, slot_idx)));
+    // translate-c: ?*anyopaque is align(1)
+    //var r: ?*lean_object = @as(?*lean_object, @ptrCast(lean_alloc_small(sz1, slot_idx)));
+    var r: ?*lean_object = @as(?*lean_object, @ptrCast(@alignCast(lean_alloc_small(sz1, slot_idx))));
     if (sz1 > sz) {
         var end: [*c]usize = @as([*c]usize, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(r))) + sz1)));
         (blk: {
@@ -480,8 +482,8 @@ pub fn lean_set_st_header(arg_o: ?*lean_object, arg_tag: c_uint, arg_other: c_ui
     var tag = arg_tag;
     var other = arg_other;
     o.?.*.m_rc = 1;
-    o.?.*.m_tag = tag;
-    o.?.*.m_other = other;
+    o.?.*.m_tag = @intCast(tag);
+    o.?.*.m_other = @intCast(other);
     o.?.*.m_cs_sz = 0;
 }
 pub fn lean_set_non_heap_header(arg_o: ?*lean_object, arg_sz: usize, arg_tag: c_uint, arg_other: c_uint) callconv(.C) void {
@@ -531,7 +533,7 @@ pub fn lean_ctor_obj_cptr(arg_o: ?*lean_object) callconv(.C) [*c]?*lean_object {
             lean_notify_assert("src/lean.zig", @as(c_int, 532), "lean_is_ctor(o)");
         }
     }
-    return lean_to_ctor(o).*.m_objs();
+    return lean_to_ctor(o).?.*.m_objs();
 }
 pub fn lean_ctor_scalar_cptr(arg_o: ?*lean_object) callconv(.C) [*c]u8 {
     var o = arg_o;
@@ -726,19 +728,19 @@ pub fn lean_ctor_set_float(arg_o: b_lean_obj_arg, arg_offset: c_uint, arg_v: f64
 }
 pub fn lean_closure_fun(arg_o: ?*lean_object) callconv(.C) ?*anyopaque {
     var o = arg_o;
-    return lean_to_closure(o).*.m_fun;
+    return lean_to_closure(o).?.*.m_fun;
 }
 pub fn lean_closure_arity(arg_o: ?*lean_object) callconv(.C) c_uint {
     var o = arg_o;
-    return @as(c_uint, @bitCast(@as(c_uint, lean_to_closure(o).*.m_arity)));
+    return @as(c_uint, @bitCast(@as(c_uint, lean_to_closure(o).?.*.m_arity)));
 }
 pub fn lean_closure_num_fixed(arg_o: ?*lean_object) callconv(.C) c_uint {
     var o = arg_o;
-    return @as(c_uint, @bitCast(@as(c_uint, lean_to_closure(o).*.m_num_fixed)));
+    return @as(c_uint, @bitCast(@as(c_uint, lean_to_closure(o).?.*.m_num_fixed)));
 }
 pub fn lean_closure_arg_cptr(arg_o: ?*lean_object) callconv(.C) [*c]?*lean_object {
     var o = arg_o;
-    return lean_to_closure(o).*.m_objs();
+    return lean_to_closure(o).?.*.m_objs();
 }
 pub fn lean_alloc_closure(arg_fun: ?*anyopaque, arg_arity: c_uint, arg_num_fixed: c_uint) callconv(.C) lean_obj_res {
     var fun = arg_fun;
@@ -769,7 +771,7 @@ pub fn lean_closure_get(arg_o: b_lean_obj_arg, arg_i: c_uint) callconv(.C) b_lea
             lean_notify_assert("src/lean.zig", @as(c_int, 647), "i < lean_closure_num_fixed(o)");
         }
     }
-    return lean_to_closure(o).*.m_objs()[i];
+    return lean_to_closure(o).?.*.m_objs()[i];
 }
 pub fn lean_closure_set(arg_o: u_lean_obj_arg, arg_i: c_uint, arg_a: lean_obj_arg) callconv(.C) void {
     var o = arg_o;
@@ -780,7 +782,7 @@ pub fn lean_closure_set(arg_o: u_lean_obj_arg, arg_i: c_uint, arg_a: lean_obj_ar
             lean_notify_assert("src/lean.zig", @as(c_int, 651), "i < lean_closure_num_fixed(o)");
         }
     }
-    lean_to_closure(o).*.m_objs()[i] = a;
+    lean_to_closure(o).?.*.m_objs()[i] = a;
 }
 pub extern fn lean_apply_1(f: ?*lean_object, a1: ?*lean_object) ?*lean_object;
 pub extern fn lean_apply_2(f: ?*lean_object, a1: ?*lean_object, a2: ?*lean_object) ?*lean_object;
@@ -811,11 +813,11 @@ pub fn lean_alloc_array(arg_size: usize, arg_capacity: usize) callconv(.C) lean_
 }
 pub fn lean_array_size(arg_o: b_lean_obj_arg) callconv(.C) usize {
     var o = arg_o;
-    return lean_to_array(o).*.m_size;
+    return lean_to_array(o).?.*.m_size;
 }
 pub fn lean_array_capacity(arg_o: b_lean_obj_arg) callconv(.C) usize {
     var o = arg_o;
-    return lean_to_array(o).*.m_capacity;
+    return lean_to_array(o).?.*.m_capacity;
 }
 pub fn lean_array_byte_size(arg_o: ?*lean_object) callconv(.C) usize {
     var o = arg_o;
@@ -823,7 +825,7 @@ pub fn lean_array_byte_size(arg_o: ?*lean_object) callconv(.C) usize {
 }
 pub fn lean_array_cptr(arg_o: ?*lean_object) callconv(.C) [*c]?*lean_object {
     var o = arg_o;
-    return lean_to_array(o).*.m_data();
+    return lean_to_array(o).?.*.m_data();
 }
 pub fn lean_array_set_size(arg_o: u_lean_obj_arg, arg_sz: usize) callconv(.C) void {
     var o = arg_o;
@@ -843,7 +845,7 @@ pub fn lean_array_set_size(arg_o: u_lean_obj_arg, arg_sz: usize) callconv(.C) vo
             lean_notify_assert("src/lean.zig", @as(c_int, 692), "sz <= lean_array_capacity(o)");
         }
     }
-    lean_to_array(o).*.m_size = sz;
+    lean_to_array(o).?.*.m_size = sz;
 }
 pub fn lean_array_get_core(arg_o: b_lean_obj_arg, arg_i: usize) callconv(.C) b_lean_obj_res {
     var o = arg_o;
@@ -853,7 +855,7 @@ pub fn lean_array_get_core(arg_o: b_lean_obj_arg, arg_i: usize) callconv(.C) b_l
             lean_notify_assert("src/lean.zig", @as(c_int, 696), "i < lean_array_size(o)");
         }
     }
-    return lean_to_array(o).*.m_data()[i];
+    return lean_to_array(o).?.*.m_data()[i];
 }
 pub fn lean_array_set_core(arg_o: u_lean_obj_arg, arg_i: usize, arg_v: lean_obj_arg) callconv(.C) void {
     var o = arg_o;
@@ -869,7 +871,7 @@ pub fn lean_array_set_core(arg_o: u_lean_obj_arg, arg_i: usize, arg_v: lean_obj_
             lean_notify_assert("src/lean.zig", @as(c_int, 703), "i < lean_array_size(o)");
         }
     }
-    lean_to_array(o).*.m_data()[i] = v;
+    lean_to_array(o).?.*.m_data()[i] = v;
 }
 pub extern fn lean_array_mk(l: lean_obj_arg) ?*lean_object;
 pub extern fn lean_array_data(a: lean_obj_arg) ?*lean_object;
@@ -1019,7 +1021,7 @@ pub fn lean_sarray_elem_size(arg_o: ?*lean_object) callconv(.C) c_uint {
 }
 pub fn lean_sarray_capacity(arg_o: ?*lean_object) callconv(.C) usize {
     var o = arg_o;
-    return lean_to_sarray(o).*.m_capacity;
+    return lean_to_sarray(o).?.*.m_capacity;
 }
 pub fn lean_sarray_byte_size(arg_o: ?*lean_object) callconv(.C) usize {
     var o = arg_o;
@@ -1027,7 +1029,7 @@ pub fn lean_sarray_byte_size(arg_o: ?*lean_object) callconv(.C) usize {
 }
 pub fn lean_sarray_size(arg_o: b_lean_obj_arg) callconv(.C) usize {
     var o = arg_o;
-    return lean_to_sarray(o).*.m_size;
+    return lean_to_sarray(o).?.*.m_size;
 }
 pub fn lean_sarray_set_size(arg_o: u_lean_obj_arg, arg_sz: usize) callconv(.C) void {
     var o = arg_o;
@@ -1042,11 +1044,11 @@ pub fn lean_sarray_set_size(arg_o: u_lean_obj_arg, arg_sz: usize) callconv(.C) v
             lean_notify_assert("src/lean.zig", @as(c_int, 847), "sz <= lean_sarray_capacity(o)");
         }
     }
-    lean_to_sarray(o).*.m_size = sz;
+    lean_to_sarray(o).?.*.m_size = sz;
 }
 pub fn lean_sarray_cptr(arg_o: ?*lean_object) callconv(.C) [*c]u8 {
     var o = arg_o;
-    return lean_to_sarray(o).*.m_data();
+    return lean_to_sarray(o).?.*.m_data();
 }
 pub extern fn lean_byte_array_mk(a: lean_obj_arg) lean_obj_res;
 pub extern fn lean_byte_array_data(a: lean_obj_arg) lean_obj_res;
@@ -1217,7 +1219,7 @@ pub extern fn lean_utf8_strlen(str: [*c]const u8) usize;
 pub extern fn lean_utf8_n_strlen(str: [*c]const u8, n: usize) usize;
 pub fn lean_string_capacity(arg_o: ?*lean_object) callconv(.C) usize {
     var o = arg_o;
-    return lean_to_string(o).*.m_capacity;
+    return lean_to_string(o).?.*.m_capacity;
 }
 pub fn lean_string_byte_size(arg_o: ?*lean_object) callconv(.C) usize {
     var o = arg_o;
@@ -1235,15 +1237,15 @@ pub fn lean_string_cstr(arg_o: b_lean_obj_arg) callconv(.C) [*c]const u8 {
             lean_notify_assert("src/lean.zig", @as(c_int, 998), "lean_is_string(o)");
         }
     }
-    return lean_to_string(o).*.m_data();
+    return lean_to_string(o).?.*.m_data();
 }
 pub fn lean_string_size(arg_o: b_lean_obj_arg) callconv(.C) usize {
     var o = arg_o;
-    return lean_to_string(o).*.m_size;
+    return lean_to_string(o).?.*.m_size;
 }
 pub fn lean_string_len(arg_o: b_lean_obj_arg) callconv(.C) usize {
     var o = arg_o;
-    return lean_to_string(o).*.m_length;
+    return lean_to_string(o).?.*.m_length;
 }
 pub extern fn lean_string_push(s: lean_obj_arg, c: u32) lean_obj_res;
 pub extern fn lean_string_append(s1: lean_obj_arg, s2: b_lean_obj_arg) lean_obj_res;

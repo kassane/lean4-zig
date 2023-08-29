@@ -1,5 +1,5 @@
 const std = @import("std");
-const lean4 = @import("c.zig");
+const lean4 = @import("lean4");
 
 pub fn main() !void {
     lean4.lean_initialize_runtime_module();
