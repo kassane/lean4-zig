@@ -14,10 +14,18 @@ pub fn build(b: *std.Build) !void {
 }
 
 fn lean4FFI(b: *std.Build) void {
+    const lake = b.findProgram(&.{"lake"}, &.{}) catch @panic("lake not found!");
+    const lakebuild = lakeBuild(b, "examples/ffi/app");
+    const update = b.addSystemCommand(&.{
+        lake,
+        "--dir=examples/ffi/app",
+        "update",
+    });
     const run = b.addSystemCommand(&.{
         "examples/ffi/app/build/bin/app",
     });
-    run.step.dependOn(&lakeBuild(b, "examples/ffi/app").step);
+    lakebuild.step.dependOn(&update.step);
+    run.step.dependOn(&lakebuild.step);
     const run_cmd = b.step("zffi", "run zig-lib on lean4-app");
     run_cmd.dependOn(&run.step);
 }
