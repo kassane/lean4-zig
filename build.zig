@@ -42,12 +42,15 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
 
     if (exe.target.isDarwin())
         exe.addLibraryPath(.{ .path = "/usr/local/lib" });
-
+    if (exe.target.isWindows())
+        exe.addLibraryPath(.{ .path = b.pathJoin(
+            &.{
+                try lean4prefix(b),
+                "bin",
+            },
+        });
     exe.addLibraryPath(.{ .path = try lean4LibDir(b) });
-
     exe.step.dependOn(&lakeBuild(b, "examples/reverse-ffi/lib").step);
-
-    exe.linkSystemLibrary("RFFI");
     exe.linkSystemLibrary("leanshared");
     exe.linkLibC();
 
@@ -79,6 +82,18 @@ fn lean4LibDir(b: *std.Build) ![]const u8 {
         .argv = &.{
             lean,
             "--print-libdir",
+        },
+    });
+    var out = std.mem.split(u8, run.stdout, "\n"); // remove newline
+    return out.first();
+}
+fn lean4Prefix(b: *std.Build) ![]const u8 {
+    const lean = try b.findProgram(&.{"lean"}, &.{});
+    const run = try std.ChildProcess.exec(.{
+        .allocator = b.allocator,
+        .argv = &.{
+            lean,
+            "--print-prefix",
         },
     });
     var out = std.mem.split(u8, run.stdout, "\n"); // remove newline
