@@ -41,33 +41,26 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
     exe.addLibraryPath(.{ .path = "examples/reverse-ffi/lib/build/lib" });
     exe.addLibraryPath(.{ .path = try lean4LibDir(b) });
 
-    if (exe.target.isDarwin())
+    if (exe.target.isDarwin()) {
         exe.addLibraryPath(.{ .path = "/usr/local/lib" });
-    if (exe.target.isWindows()) {
-        exe.addIncludePath(.{
-            .path = b.pathJoin(
-                &.{
-                    try lean4Prefix(b),
-                    "include",
-                },
-            ),
-        });
-        exe.addLibraryPath(.{
-            .path = b.pathJoin(
-                &.{
-                    try lean4Prefix(b),
-                    "bin",
-                },
-            ),
-        });
     }
-    exe.step.dependOn(&lakeBuild(b, "examples/reverse-ffi/lib").step);    
+    exe.addIncludePath(.{
+        .path = b.pathJoin(
+            &.{
+                try lean4Prefix(b),
+                "include",
+            },
+        ),
+    });
+    exe.step.dependOn(&lakeBuild(b, "examples/reverse-ffi/lib").step);
+
+    // static obj
+    exe.addCSourceFile(.{ .file = .{ .path = "examples/reverse-ffi/lib/build/ir/RFFI.c" }, .flags = &.{} });
     if (exe.target.isWindows()) {
-        exe.addCSourceFile(.{.file = .{.path = "examples/reverse-ffi/lib/build/ir/RFFI.c" }, .flags = &.{}});
         //exe.linkSystemLibraryName("RFFI.dll"); // not found "libRFFI.dll.a"
         exe.linkSystemLibraryName("leanshared.dll");
     } else {
-        exe.linkSystemLibrary("RFFI");
+        // exe.linkSystemLibrary("RFFI"); // sharedlib
         exe.linkSystemLibrary("leanshared");
     }
     exe.linkLibC();
