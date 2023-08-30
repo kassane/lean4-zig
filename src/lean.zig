@@ -1,57 +1,4 @@
-pub const __builtin_bswap16 = std.zig.c_builtins.__builtin_bswap16;
-pub const __builtin_bswap32 = std.zig.c_builtins.__builtin_bswap32;
-pub const __builtin_bswap64 = std.zig.c_builtins.__builtin_bswap64;
-pub const __builtin_signbit = std.zig.c_builtins.__builtin_signbit;
-pub const __builtin_signbitf = std.zig.c_builtins.__builtin_signbitf;
-pub const __builtin_popcount = std.zig.c_builtins.__builtin_popcount;
-pub const __builtin_ctz = std.zig.c_builtins.__builtin_ctz;
-pub const __builtin_clz = std.zig.c_builtins.__builtin_clz;
-pub const __builtin_sqrt = std.zig.c_builtins.__builtin_sqrt;
-pub const __builtin_sqrtf = std.zig.c_builtins.__builtin_sqrtf;
-pub const __builtin_sin = std.zig.c_builtins.__builtin_sin;
-pub const __builtin_sinf = std.zig.c_builtins.__builtin_sinf;
-pub const __builtin_cos = std.zig.c_builtins.__builtin_cos;
-pub const __builtin_cosf = std.zig.c_builtins.__builtin_cosf;
-pub const __builtin_exp = std.zig.c_builtins.__builtin_exp;
-pub const __builtin_expf = std.zig.c_builtins.__builtin_expf;
-pub const __builtin_exp2 = std.zig.c_builtins.__builtin_exp2;
-pub const __builtin_exp2f = std.zig.c_builtins.__builtin_exp2f;
-pub const __builtin_log = std.zig.c_builtins.__builtin_log;
-pub const __builtin_logf = std.zig.c_builtins.__builtin_logf;
-pub const __builtin_log2 = std.zig.c_builtins.__builtin_log2;
-pub const __builtin_log2f = std.zig.c_builtins.__builtin_log2f;
-pub const __builtin_log10 = std.zig.c_builtins.__builtin_log10;
-pub const __builtin_log10f = std.zig.c_builtins.__builtin_log10f;
-pub const __builtin_abs = std.zig.c_builtins.__builtin_abs;
-pub const __builtin_fabs = std.zig.c_builtins.__builtin_fabs;
-pub const __builtin_fabsf = std.zig.c_builtins.__builtin_fabsf;
-pub const __builtin_floor = std.zig.c_builtins.__builtin_floor;
-pub const __builtin_floorf = std.zig.c_builtins.__builtin_floorf;
-pub const __builtin_ceil = std.zig.c_builtins.__builtin_ceil;
-pub const __builtin_ceilf = std.zig.c_builtins.__builtin_ceilf;
-pub const __builtin_trunc = std.zig.c_builtins.__builtin_trunc;
-pub const __builtin_truncf = std.zig.c_builtins.__builtin_truncf;
-pub const __builtin_round = std.zig.c_builtins.__builtin_round;
-pub const __builtin_roundf = std.zig.c_builtins.__builtin_roundf;
-pub const __builtin_strlen = std.zig.c_builtins.__builtin_strlen;
-pub const __builtin_strcmp = std.zig.c_builtins.__builtin_strcmp;
-pub const __builtin_object_size = std.zig.c_builtins.__builtin_object_size;
-pub const __builtin___memset_chk = std.zig.c_builtins.__builtin___memset_chk;
-pub const __builtin_memset = std.zig.c_builtins.__builtin_memset;
-pub const __builtin___memcpy_chk = std.zig.c_builtins.__builtin___memcpy_chk;
-pub const __builtin_memcpy = std.zig.c_builtins.__builtin_memcpy;
-pub const __builtin_expect = std.zig.c_builtins.__builtin_expect;
-pub const __builtin_nanf = std.zig.c_builtins.__builtin_nanf;
-pub const __builtin_huge_valf = std.zig.c_builtins.__builtin_huge_valf;
-pub const __builtin_inff = std.zig.c_builtins.__builtin_inff;
-pub const __builtin_isnan = std.zig.c_builtins.__builtin_isnan;
-pub const __builtin_isinf = std.zig.c_builtins.__builtin_isinf;
-pub const __builtin_isinf_sign = std.zig.c_builtins.__builtin_isinf_sign;
-pub const __has_builtin = std.zig.c_builtins.__has_builtin;
-pub const __builtin_assume = std.zig.c_builtins.__builtin_assume;
-pub const __builtin_unreachable = std.zig.c_builtins.__builtin_unreachable;
-pub const __builtin_constant_p = std.zig.c_builtins.__builtin_constant_p;
-pub const __builtin_mul_overflow = std.zig.c_builtins.__builtin_mul_overflow;
+const std = @import("std");
 
 pub extern fn lean_notify_assert(fileName: [*:0]const u8, line: c_int, condition: [*:0]const u8) void;
 pub fn lean_is_big_object_tag(arg_tag: u8) callconv(.C) bool {
@@ -178,9 +125,9 @@ pub extern fn lean_set_exit_on_panic(flag: bool) void;
 pub extern fn lean_set_panic_messages(flag: bool) void;
 pub extern fn lean_panic_fn(default_val: ?*lean_object, msg: ?*lean_object) ?*lean_object;
 pub extern fn lean_internal_panic(msg: [*c]const u8) noreturn;
-pub extern fn lean_internal_panic_out_of_memory(...) noreturn;
-pub extern fn lean_internal_panic_unreachable(...) noreturn;
-pub extern fn lean_internal_panic_rc_overflow(...) noreturn;
+pub extern fn lean_internal_panic_out_of_memory() noreturn;
+pub extern fn lean_internal_panic_unreachable() noreturn;
+pub extern fn lean_internal_panic_rc_overflow() noreturn;
 pub fn lean_align(arg_v: usize, arg_a: usize) callconv(.C) usize {
     var v = arg_v;
     var a = arg_a;
@@ -203,7 +150,7 @@ pub fn lean_get_slot_idx(arg_sz: c_uint) callconv(.C) c_uint {
 pub extern fn lean_alloc_small(sz: c_uint, slot_idx: c_uint) ?*anyopaque;
 pub extern fn lean_free_small(p: ?*anyopaque) void;
 pub extern fn lean_small_mem_size(p: ?*anyopaque) c_uint;
-pub extern fn lean_inc_heartbeat(...) void;
+pub extern fn lean_inc_heartbeat() void;
 pub extern fn malloc(c_ulong) ?*anyopaque;
 pub fn lean_alloc_small_object(arg_sz: c_uint) callconv(.C) ?*lean_object {
     var sz = arg_sz;
@@ -218,7 +165,7 @@ pub fn lean_alloc_small_object(arg_sz: c_uint) callconv(.C) ?*lean_object {
 }
 pub fn lean_alloc_ctor_memory(arg_sz: c_uint) callconv(.C) ?*lean_object {
     var sz = arg_sz;
-    var sz1: c_uint = @as(c_uint, @bitCast(@as(c_uint, @truncate(lean_align(@as(usize, @bitCast(@as(c_ulong, sz))), @as(usize, @bitCast(@as(c_long, @as(c_int, 8)))))))));
+    var sz1: c_uint = @as(c_uint, @bitCast(@as(c_uint, @truncate(lean_align(@as(usize, @intCast(sz)), @as(usize, @intCast(8)))))));
     var slot_idx: c_uint = lean_get_slot_idx(sz1);
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!(sz1 <= @as(c_uint, @bitCast(@as(c_int, 4096)))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
@@ -1335,9 +1282,9 @@ pub fn lean_thunk_get_own(arg_t: b_lean_obj_arg) callconv(.C) lean_obj_res {
     lean_inc(r);
     return r;
 }
-pub extern fn lean_init_task_manager(...) void;
+pub extern fn lean_init_task_manager() void;
 pub extern fn lean_init_task_manager_using(num_workers: c_uint) void;
-pub extern fn lean_finalize_task_manager(...) void;
+pub extern fn lean_finalize_task_manager() void;
 pub extern fn lean_task_spawn_core(c: lean_obj_arg, prio: c_uint, keep_alive: bool) lean_obj_res;
 pub fn lean_task_spawn(arg_c: lean_obj_arg, arg_prio: lean_obj_arg) callconv(.C) lean_obj_res {
     var c = arg_c;
@@ -1367,7 +1314,7 @@ pub fn lean_task_get_own(arg_t: lean_obj_arg) callconv(.C) lean_obj_res {
     lean_dec(t);
     return r;
 }
-pub extern fn lean_io_check_canceled_core(...) bool;
+pub extern fn lean_io_check_canceled_core() bool;
 pub extern fn lean_io_cancel_core(t: b_lean_obj_arg) void;
 pub extern fn lean_io_has_finished_core(t: b_lean_obj_arg) bool;
 pub extern fn lean_io_wait_any_core(task_list: b_lean_obj_arg) b_lean_obj_res;
@@ -2458,19 +2405,19 @@ pub fn lean_io_result_get_error(arg_r: b_lean_obj_arg) callconv(.C) b_lean_obj_r
     return lean_ctor_get(r, @as(c_uint, @bitCast(@as(c_int, 0))));
 }
 pub extern fn lean_io_result_show_error(r: b_lean_obj_arg) void;
-pub extern fn lean_io_mark_end_initialization(...) void;
+pub extern fn lean_io_mark_end_initialization() void;
 pub fn lean_io_result_mk_ok(arg_a: lean_obj_arg) callconv(.C) lean_obj_res {
     var a = arg_a;
     var r: ?*lean_object = lean_alloc_ctor(@as(c_uint, @bitCast(@as(c_int, 0))), @as(c_uint, @bitCast(@as(c_int, 2))), @as(c_uint, @bitCast(@as(c_int, 0))));
     lean_ctor_set(r, @as(c_uint, @bitCast(@as(c_int, 0))), a);
-    lean_ctor_set(r, @as(c_uint, @bitCast(@as(c_int, 1))), lean_box(@as(usize, @bitCast(@as(c_long, @as(c_int, 0))))));
+    lean_ctor_set(r, @as(c_uint, @bitCast(@as(c_int, 1))), lean_box(@as(usize, @intCast(0))));
     return r;
 }
 pub fn lean_io_result_mk_error(arg_e: lean_obj_arg) callconv(.C) lean_obj_res {
     var e = arg_e;
     var r: ?*lean_object = lean_alloc_ctor(@as(c_uint, @bitCast(@as(c_int, 1))), @as(c_uint, @bitCast(@as(c_int, 2))), @as(c_uint, @bitCast(@as(c_int, 0))));
     lean_ctor_set(r, @as(c_uint, @bitCast(@as(c_int, 0))), e);
-    lean_ctor_set(r, @as(c_uint, @bitCast(@as(c_int, 1))), lean_box(@as(usize, @bitCast(@as(c_long, @as(c_int, 0))))));
+    lean_ctor_set(r, @as(c_uint, @bitCast(@as(c_int, 1))), lean_box(@as(usize, @intCast(0))));
     return r;
 }
 pub extern fn lean_mk_io_error_already_exists(u32, lean_obj_arg) lean_obj_res;
@@ -2699,7 +2646,61 @@ pub const LEAN_MAX_SMALL_NAT = std.math.maxInt(c_int) >> @as(c_int, 1);
 pub const LEAN_MAX_SMALL_INT = if (std.zig.c_translation.sizeof(?*anyopaque) == @as(c_int, 8)) std.math.maxInt(c_int) else @as(c_int, 1) << @as(c_int, 30);
 pub const LEAN_MIN_SMALL_INT = if (std.zig.c_translation.sizeof(?*anyopaque) == @as(c_int, 8)) std.math.maxInt(c_int) else -(@as(c_int, 1) << @as(c_int, 30));
 pub const lean_task = struct_lean_task;
-const std = @import("std");
+
+pub const __builtin_bswap16 = std.zig.c_builtins.__builtin_bswap16;
+pub const __builtin_bswap32 = std.zig.c_builtins.__builtin_bswap32;
+pub const __builtin_bswap64 = std.zig.c_builtins.__builtin_bswap64;
+pub const __builtin_signbit = std.zig.c_builtins.__builtin_signbit;
+pub const __builtin_signbitf = std.zig.c_builtins.__builtin_signbitf;
+pub const __builtin_popcount = std.zig.c_builtins.__builtin_popcount;
+pub const __builtin_ctz = std.zig.c_builtins.__builtin_ctz;
+pub const __builtin_clz = std.zig.c_builtins.__builtin_clz;
+pub const __builtin_sqrt = std.zig.c_builtins.__builtin_sqrt;
+pub const __builtin_sqrtf = std.zig.c_builtins.__builtin_sqrtf;
+pub const __builtin_sin = std.zig.c_builtins.__builtin_sin;
+pub const __builtin_sinf = std.zig.c_builtins.__builtin_sinf;
+pub const __builtin_cos = std.zig.c_builtins.__builtin_cos;
+pub const __builtin_cosf = std.zig.c_builtins.__builtin_cosf;
+pub const __builtin_exp = std.zig.c_builtins.__builtin_exp;
+pub const __builtin_expf = std.zig.c_builtins.__builtin_expf;
+pub const __builtin_exp2 = std.zig.c_builtins.__builtin_exp2;
+pub const __builtin_exp2f = std.zig.c_builtins.__builtin_exp2f;
+pub const __builtin_log = std.zig.c_builtins.__builtin_log;
+pub const __builtin_logf = std.zig.c_builtins.__builtin_logf;
+pub const __builtin_log2 = std.zig.c_builtins.__builtin_log2;
+pub const __builtin_log2f = std.zig.c_builtins.__builtin_log2f;
+pub const __builtin_log10 = std.zig.c_builtins.__builtin_log10;
+pub const __builtin_log10f = std.zig.c_builtins.__builtin_log10f;
+pub const __builtin_abs = std.zig.c_builtins.__builtin_abs;
+pub const __builtin_fabs = std.zig.c_builtins.__builtin_fabs;
+pub const __builtin_fabsf = std.zig.c_builtins.__builtin_fabsf;
+pub const __builtin_floor = std.zig.c_builtins.__builtin_floor;
+pub const __builtin_floorf = std.zig.c_builtins.__builtin_floorf;
+pub const __builtin_ceil = std.zig.c_builtins.__builtin_ceil;
+pub const __builtin_ceilf = std.zig.c_builtins.__builtin_ceilf;
+pub const __builtin_trunc = std.zig.c_builtins.__builtin_trunc;
+pub const __builtin_truncf = std.zig.c_builtins.__builtin_truncf;
+pub const __builtin_round = std.zig.c_builtins.__builtin_round;
+pub const __builtin_roundf = std.zig.c_builtins.__builtin_roundf;
+pub const __builtin_strlen = std.zig.c_builtins.__builtin_strlen;
+pub const __builtin_strcmp = std.zig.c_builtins.__builtin_strcmp;
+pub const __builtin_object_size = std.zig.c_builtins.__builtin_object_size;
+pub const __builtin___memset_chk = std.zig.c_builtins.__builtin___memset_chk;
+pub const __builtin_memset = std.zig.c_builtins.__builtin_memset;
+pub const __builtin___memcpy_chk = std.zig.c_builtins.__builtin___memcpy_chk;
+pub const __builtin_memcpy = std.zig.c_builtins.__builtin_memcpy;
+pub const __builtin_expect = std.zig.c_builtins.__builtin_expect;
+pub const __builtin_nanf = std.zig.c_builtins.__builtin_nanf;
+pub const __builtin_huge_valf = std.zig.c_builtins.__builtin_huge_valf;
+pub const __builtin_inff = std.zig.c_builtins.__builtin_inff;
+pub const __builtin_isnan = std.zig.c_builtins.__builtin_isnan;
+pub const __builtin_isinf = std.zig.c_builtins.__builtin_isinf;
+pub const __builtin_isinf_sign = std.zig.c_builtins.__builtin_isinf_sign;
+pub const __has_builtin = std.zig.c_builtins.__has_builtin;
+pub const __builtin_assume = std.zig.c_builtins.__builtin_assume;
+pub const __builtin_unreachable = std.zig.c_builtins.__builtin_unreachable;
+pub const __builtin_constant_p = std.zig.c_builtins.__builtin_constant_p;
+pub const __builtin_mul_overflow = std.zig.c_builtins.__builtin_mul_overflow;
 
 test "semantic analyzer" {
     std.testing.refAllDecls(@This());
