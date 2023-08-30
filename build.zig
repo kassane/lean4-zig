@@ -46,7 +46,7 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
         exe.addLibraryPath(.{
         .path = b.pathJoin(
             &.{
-                try lean4prefix(b),
+                try lean4Prefix(b),
                 "bin",
             },
         ),
