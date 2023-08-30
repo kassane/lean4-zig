@@ -1,10 +1,50 @@
+const std = @import("std");
+
 const FlexibleArrayType = std.zig.c_translation.FlexibleArrayType;
 pub const __builtin_expect = std.zig.c_builtins.__builtin_expect;
+
+pub const LEAN_VERSION_MAJOR = @as(c_int, 4);
+pub const LEAN_VERSION_MINOR = 0;
+pub const LEAN_VERSION_PATCH = 0;
+pub const LEAN_VERSION_IS_RELEASE = 0;
+pub const LEAN_SPECIAL_VERSION_DESC = "nightly-2023-08-26";
+pub const LEAN_IS_STAGE0 = 0;
+
+pub const LEAN_CLOSURE_MAX_ARGS = @as(c_int, 16);
+pub const LEAN_OBJECT_SIZE_DELTA = @as(c_uint, 8);
+pub const LEAN_MAX_SMALL_OBJECT_SIZE = @as(c_int, 4096);
+
+pub inline fn LEAN_UNLIKELY(x: bool) bool {
+    return __builtin_expect(@intFromBool(x), 0) != 0;
+}
+pub inline fn LEAN_LIKELY(x: bool) bool {
+    return __builtin_expect(@intFromBool(x), 1) != 0;
+}
 
 pub extern fn lean_notify_assert(fileName: [*:0]const u8, line: c_int, condition: [*:0]const u8) void;
 inline fn assert(src: std.builtin.SourceLocation, cond: bool, msg: [*:0]const u8) void {
     if (!cond) lean_notify_assert(src.file, @intCast(src.line), msg);
 }
+
+pub inline fn LEAN_BYTE(Var: anytype, Index: anytype) @TypeOf((std.zig.c_translation.cast([*]u8, &Var) + Index).*) {
+    return (std.zig.c_translation.cast([*]u8, &Var) + Index).*;
+}
+
+pub const LeanMaxCtorTag = @as(u8, 244);
+pub const LeanClosure = @as(u8, 245);
+pub const LeanArray = @as(u8, 246);
+pub const LeanStructArray = @as(u8, 247);
+pub const LeanScalarArray = @as(u8, 248);
+pub const LeanString = @as(u8, 249);
+pub const LeanMPZ = @as(u8, 250);
+pub const LeanThunk = @as(u8, 251);
+pub const LeanTask = @as(u8, 252);
+pub const LeanRef = @as(u8, 253);
+pub const LeanExternal = @as(u8, 254);
+pub const LeanReserved = @as(u8, 255);
+
+pub const LEAN_MAX_CTOR_FIELDS = @as(c_uint, 256);
+pub const LEAN_MAX_CTOR_SCALARS_SIZE = @as(c_uint, 1024);
 
 pub fn lean_is_big_object_tag(tag: u8) callconv(.C) bool {
     return tag == 246 or tag == 247 or tag == 248 or tag == 249;
@@ -867,6 +907,9 @@ pub fn lean_get_external_class(o: LeanPtr) callconv(.C) [*c]lean_external_class 
 pub fn lean_get_external_data(o: LeanPtr) callconv(.C) ?*anyopaque {
     return lean_to_external(o).*.m_data;
 }
+
+pub const LEAN_MAX_SMALL_NAT = std.math.maxInt(c_int) >> 1;
+
 pub extern fn lean_nat_big_succ(a: LeanPtr) LeanPtr;
 pub extern fn lean_nat_big_add(a1: LeanPtr, a2: LeanPtr) LeanPtr;
 pub extern fn lean_nat_big_sub(a1: LeanPtr, a2: LeanPtr) LeanPtr;
@@ -1016,6 +1059,9 @@ pub extern fn lean_nat_shiftr(a1: b_lean_obj_arg, a2: b_lean_obj_arg) lean_obj_r
 pub extern fn lean_nat_pow(a1: b_lean_obj_arg, a2: b_lean_obj_arg) lean_obj_res;
 pub extern fn lean_nat_gcd(a1: b_lean_obj_arg, a2: b_lean_obj_arg) lean_obj_res;
 pub extern fn lean_nat_log2(a: b_lean_obj_arg) lean_obj_res;
+
+pub const LEAN_MAX_SMALL_INT = if (@sizeOf(*anyopaque) == 8) std.math.maxInt(c_int) else 1 << 30;
+pub const LEAN_MIN_SMALL_INT = if (@sizeOf(*anyopaque) == 8) std.math.maxInt(c_int) else -(1 << 30);
 pub extern fn lean_int_big_neg(a: LeanPtr) LeanPtr;
 pub extern fn lean_int_big_add(a1: LeanPtr, a2: LeanPtr) LeanPtr;
 pub extern fn lean_int_big_sub(a1: LeanPtr, a2: LeanPtr) LeanPtr;
@@ -1828,40 +1874,3 @@ pub fn lean_internal_is_stage0(_: lean_obj_arg) callconv(.C) u8 {
 pub fn lean_nat_pred(n: b_lean_obj_arg) callconv(.C) lean_obj_res {
     return lean_nat_sub(n, lean_box(1));
 }
-pub const LEAN_VERSION_MAJOR = @as(c_int, 4);
-pub const LEAN_VERSION_MINOR = 0;
-pub const LEAN_VERSION_PATCH = 0;
-pub const LEAN_VERSION_IS_RELEASE = 0;
-pub const LEAN_SPECIAL_VERSION_DESC = "nightly-2023-08-26";
-pub const LEAN_IS_STAGE0 = 0;
-pub const LEAN_CLOSURE_MAX_ARGS = @as(c_int, 16);
-pub const LEAN_OBJECT_SIZE_DELTA = @as(c_uint, 8);
-pub const LEAN_MAX_SMALL_OBJECT_SIZE = @as(c_int, 4096);
-pub inline fn LEAN_UNLIKELY(x: bool) bool {
-    return __builtin_expect(@intFromBool(x), 0) != 0;
-}
-pub inline fn LEAN_LIKELY(x: bool) bool {
-    return __builtin_expect(@intFromBool(x), 1) != 0;
-}
-pub inline fn LEAN_BYTE(Var: anytype, Index: anytype) @TypeOf((std.zig.c_translation.cast([*]u8, &Var) + Index).*) {
-    return (std.zig.c_translation.cast([*]u8, &Var) + Index).*;
-}
-pub const LeanMaxCtorTag = @as(c_int, 244);
-pub const LeanClosure = @as(c_int, 245);
-pub const LeanArray = @as(c_int, 246);
-pub const LeanStructArray = @as(c_int, 247);
-pub const LeanScalarArray = @as(c_int, 248);
-pub const LeanString = @as(c_int, 249);
-pub const LeanMPZ = @as(c_int, 250);
-pub const LeanThunk = @as(c_int, 251);
-pub const LeanTask = @as(c_int, 252);
-pub const LeanRef = @as(c_int, 253);
-pub const LeanExternal = @as(c_int, 254);
-pub const LeanReserved = @as(c_int, 255);
-pub const LEAN_MAX_CTOR_FIELDS = @as(c_int, 256);
-pub const LEAN_MAX_CTOR_SCALARS_SIZE = @as(c_int, 1024);
-pub const LEAN_MAX_SMALL_NAT = std.math.maxInt(c_int) >> @as(c_int, 1);
-pub const LEAN_MAX_SMALL_INT = if (@sizeOf(*anyopaque) == 8) std.math.maxInt(c_int) else 1 << 30;
-pub const LEAN_MIN_SMALL_INT = if (@sizeOf(*anyopaque) == 8) std.math.maxInt(c_int) else -(1 << 30);
-pub const lean_task = lean_task_object;
-const std = @import("std");
