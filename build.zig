@@ -42,19 +42,29 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
 
     if (exe.target.isDarwin())
         exe.addLibraryPath(.{ .path = "/usr/local/lib" });
-    if (exe.target.isWindows())
-        exe.addLibraryPath(.{
-        .path = b.pathJoin(
-            &.{
-                try lean4Prefix(b),
-                "bin",
-            },
-        ),
-    });
+    if (exe.target.isWindows()) {
+            exe.addLibraryPath(.{
+            .path = b.pathJoin(
+                &.{
+                    try lean4Prefix(b),
+                    "bin",
+                },
+            ),
+        });
+        exe.addIncludePath(.{
+            .path = b.pathJoin(
+                &.{
+                    try lean4Prefix(b),
+                    "include",
+                },
+            ),
+        });
+    }
     exe.addLibraryPath(.{ .path = try lean4LibDir(b) });
     exe.step.dependOn(&lakeBuild(b, "examples/reverse-ffi/lib").step);    
     if (exe.target.isWindows()) {
-        exe.linkSystemLibraryName("RFFI");
+        exe.addCSourceFile(.{.file = .{.path = "examples/reverse-ffi/lib/build/ir/RFFI.c" }, .flags = &.{}});
+        //exe.linkSystemLibraryName("RFFI.dll"); // not found "libRFFI.dll.a"
         exe.linkSystemLibraryName("leanshared.dll");
     } else {
         exe.linkSystemLibrary("RFFI");
