@@ -39,10 +39,15 @@ jobs:
           .\elan-init.ps1 -NoPrompt 1 -DefaultToolchain leanprover/lean4:nightly
           echo "Adding location $HOME\.elan\bin to PATH..."
           echo "$HOME\.elan\bin" >> $env:GITHUB_PATH
-          lake --dir=examples\reverse-ffi\lib build
-          gci -Force examples\reverse-ffi\lib
-          gci -Force examples\reverse-ffi\lib\build
-          gci -Force examples\reverse-ffi\lib\build\lib
+      
+      - name: Windows build config
+        if: startsWith(matrix.runs-on, 'windows')
+        shell: pwsh
+        run: |
+          lake --dir=$PWD\examples\reverse-ffi\lib build
+          gci -Force $PWD\examples\reverse-ffi\lib
+          gci -Force $PWD\examples\reverse-ffi\lib\build
+          gci -Force $PWD\examples\reverse-ffi\lib\build\lib
 
       - name: Build Summary ${{ matrix.targets }}
         run: zig build --summary all -freference-trace
