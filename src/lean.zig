@@ -114,17 +114,17 @@ pub fn lean_box(n: usize) callconv(.C) LeanPtr {
     return @ptrFromInt((n << 1) | 1);
 }
 pub fn lean_unbox(o: LeanPtr) callconv(.C) usize {
-    return @as(usize, @intCast(@intFromPtr(o))) >> @intCast(1);
+    return @intFromPtr(o) >> 1;
 }
 pub extern fn lean_set_exit_on_panic(flag: bool) void;
 pub extern fn lean_set_panic_messages(flag: bool) void;
 pub extern fn lean_panic_fn(default_val: LeanPtr, msg: LeanPtr) LeanPtr;
 pub extern fn lean_internal_panic(msg: [*:0]const u8) noreturn;
-pub extern fn lean_internal_panic_out_of_memory(...) noreturn;
-pub extern fn lean_internal_panic_unreachable(...) noreturn;
-pub extern fn lean_internal_panic_rc_overflow(...) noreturn;
+pub extern fn lean_internal_panic_out_of_memory() noreturn;
+pub extern fn lean_internal_panic_unreachable() noreturn;
+pub extern fn lean_internal_panic_rc_overflow() noreturn;
 pub fn lean_align(v: usize, a: usize) callconv(.C) usize {
-    return ((v / a) *% a) +% (a *% @as(usize, @intFromBool((v % a) != 0)));
+    return ((v / a) * a) + (a * @intFromBool((v % a) != 0));
 }
 pub fn lean_get_slot_idx(sz: c_uint) callconv(.C) c_uint {
     assert(@src(), sz > 0, "sz > 0");
@@ -132,19 +132,19 @@ pub fn lean_get_slot_idx(sz: c_uint) callconv(.C) c_uint {
     return sz / LEAN_OBJECT_SIZE_DELTA - 1;
 }
 pub extern fn lean_alloc_small(sz: c_uint, slot_idx: c_uint) ?*anyopaque;
-pub extern fn lean_free_small(p: ?*anyopaque) void;
-pub extern fn lean_small_mem_size(p: ?*anyopaque) c_uint;
-pub extern fn lean_inc_heartbeat(...) void;
+pub extern fn lean_free_small(p: *anyopaque) void;
+pub extern fn lean_small_mem_size(p: *anyopaque) c_uint;
+pub extern fn lean_inc_heartbeat() void;
 pub extern fn malloc(c_ulong) ?*anyopaque;
 pub fn lean_alloc_small_object(sz: c_uint) callconv(.C) LeanPtr {
-    sz = @as(c_uint, @bitCast(@as(c_uint, @truncate(lean_align(@as(usize, @bitCast(@as(c_ulong, sz))), @as(usize, @bitCast(@as(c_long, @as(c_int, 8)))))))));
-    var slot_idx: c_uint = lean_get_slot_idx(sz);
+    sz = @truncate(lean_align(sz, LEAN_OBJECT_SIZE_DELTA));
+    var slot_idx = lean_get_slot_idx(sz);
     assert(@src(), sz <= LEAN_MAX_SMALL_OBJECT_SIZE, "sz <= LEAN_MAX_SMALL_OBJECT_SIZE");
     return @as(LeanPtr, @ptrCast(lean_alloc_small(sz, slot_idx)));
 }
 pub fn lean_alloc_ctor_memory(sz: c_uint) callconv(.C) LeanPtr {
-    var sz1: c_uint = @as(c_uint, @bitCast(@as(c_uint, @truncate(lean_align(@as(usize, @bitCast(@as(c_ulong, sz))), @as(usize, @bitCast(@as(c_long, @as(c_int, 8)))))))));
-    var slot_idx: c_uint = lean_get_slot_idx(sz1);
+    var sz1: c_uint = @truncate(lean_align(sz, LEAN_OBJECT_SIZE_DELTA));
+    var slot_idx = lean_get_slot_idx(sz1);
     assert(@src(), sz1 <= LEAN_MAX_SMALL_OBJECT_SIZE, "sz1 <= LEAN_MAX_SMALL_OBJECT_SIZE");
     var r: LeanPtr = @ptrCast(lean_alloc_small(sz1, slot_idx));
     if (sz1 > sz) {
@@ -154,16 +154,16 @@ pub fn lean_alloc_ctor_memory(sz: c_uint) callconv(.C) LeanPtr {
     return r;
 }
 pub fn lean_small_object_size(o: LeanPtr) callconv(.C) c_uint {
-    return lean_small_mem_size(@as(?*anyopaque, @ptrCast(o)));
+    return lean_small_mem_size(o);
 }
 pub extern fn free(?*anyopaque) void;
 pub fn lean_free_small_object(o: LeanPtr) callconv(.C) void {
-    lean_free_small(@as(?*anyopaque, @ptrCast(o)));
+    lean_free_small(o);
 }
 pub extern fn lean_alloc_object(sz: usize) LeanPtr;
 pub extern fn lean_free_object(o: LeanPtr) void;
 pub fn lean_ptr_tag(o: LeanPtr) callconv(.C) u8 {
-    return @as(u8, @bitCast(@as(u8, @truncate(o.*.m_tag))));
+    return o.*.m_tag;
 }
 pub fn lean_ptr_other(o: LeanPtr) callconv(.C) c_uint {
     return o.*.m_other;
@@ -187,112 +187,105 @@ pub fn lean_get_rc_mt_addr(o: LeanPtr) callconv(.C) *c_int { // atomic
 pub extern fn lean_inc_ref_cold(o: LeanPtr) void;
 pub extern fn lean_inc_ref_n_cold(o: LeanPtr, n: c_uint) void;
 pub fn lean_inc_ref(o: LeanPtr) callconv(.C) void {
-    if (__builtin_expect(@as(c_long, @intFromBool(lean_is_st(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 1))))) != 0) {
+    if (LEAN_LIKELY(lean_is_st(o))) {
         o.*.m_rc += 1;
     } else if (o.*.m_rc != 0) {
         lean_inc_ref_cold(o);
     }
 }
 pub fn lean_inc_ref_n(o: LeanPtr, n: usize) callconv(.C) void {
-    if (__builtin_expect(@as(c_long, @intFromBool(lean_is_st(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 1))))) != 0) {
-        o.*.m_rc += @as(c_int, @bitCast(@as(c_uint, @truncate(n))));
+    if (LEAN_LIKELY(lean_is_st(o))) {
+        o.*.m_rc += @truncate(n);
     } else if (o.*.m_rc != 0) {
-        lean_inc_ref_n_cold(o, @as(c_uint, @bitCast(@as(c_uint, @truncate(n)))));
+        lean_inc_ref_n_cold(o, @truncate(n));
     }
 }
 pub extern fn lean_dec_ref_cold(o: LeanPtr) void;
 pub fn lean_dec_ref(o: LeanPtr) callconv(.C) void {
-    if (__builtin_expect(@as(c_long, @intFromBool(o.*.m_rc > @as(c_int, 1))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 1))))) != 0) {
+    if (LEAN_LIKELY(o.*.m_rc > 1)) {
         o.*.m_rc -= 1;
     } else if (o.*.m_rc != 0) {
         lean_dec_ref_cold(o);
     }
 }
 pub fn lean_inc(o: LeanPtr) callconv(.C) void {
-    if (!lean_is_scalar(o)) {
-        lean_inc_ref(o);
-    }
+    if (!lean_is_scalar(o)) lean_inc_ref(o);
 }
 pub fn lean_inc_n(o: LeanPtr, n: usize) callconv(.C) void {
-    if (!lean_is_scalar(o)) {
-        lean_inc_ref_n(o, n);
-    }
+    if (!lean_is_scalar(o)) lean_inc_ref_n(o, n);
 }
 pub fn lean_dec(o: LeanPtr) callconv(.C) void {
-    if (!lean_is_scalar(o)) {
-        lean_dec_ref(o);
-    }
+    if (!lean_is_scalar(o)) lean_dec_ref(o);
 }
 pub extern fn lean_dealloc(o: LeanPtr) void;
 pub fn lean_is_ctor(o: LeanPtr) callconv(.C) bool {
-    return @as(c_int, @bitCast(@as(c_uint, lean_ptr_tag(o)))) <= @as(c_int, 244);
+    return lean_ptr_tag(o) <= LeanMaxCtorTag;
 }
 pub fn lean_is_closure(o: LeanPtr) callconv(.C) bool {
-    return @as(c_int, @bitCast(@as(c_uint, lean_ptr_tag(o)))) == @as(c_int, 245);
+    return lean_ptr_tag(o) == LeanClosure;
 }
 pub fn lean_is_array(o: LeanPtr) callconv(.C) bool {
-    return @as(c_int, @bitCast(@as(c_uint, lean_ptr_tag(o)))) == @as(c_int, 246);
+    return lean_ptr_tag(o) == LeanArray;
 }
 pub fn lean_is_sarray(o: LeanPtr) callconv(.C) bool {
-    return @as(c_int, @bitCast(@as(c_uint, lean_ptr_tag(o)))) == @as(c_int, 248);
+    return lean_ptr_tag(o) == LeanScalarArray;
 }
 pub fn lean_is_string(o: LeanPtr) callconv(.C) bool {
-    return @as(c_int, @bitCast(@as(c_uint, lean_ptr_tag(o)))) == @as(c_int, 249);
+    return lean_ptr_tag(o) == LeanString;
 }
 pub fn lean_is_mpz(o: LeanPtr) callconv(.C) bool {
-    return @as(c_int, @bitCast(@as(c_uint, lean_ptr_tag(o)))) == @as(c_int, 250);
+    return lean_ptr_tag(o) == LeanMPZ;
 }
 pub fn lean_is_thunk(o: LeanPtr) callconv(.C) bool {
-    return @as(c_int, @bitCast(@as(c_uint, lean_ptr_tag(o)))) == @as(c_int, 251);
+    return lean_ptr_tag(o) == LeanThunk;
 }
 pub fn lean_is_task(o: LeanPtr) callconv(.C) bool {
-    return @as(c_int, @bitCast(@as(c_uint, lean_ptr_tag(o)))) == @as(c_int, 252);
+    return lean_ptr_tag(o) == LeanTask;
 }
 pub fn lean_is_external(o: LeanPtr) callconv(.C) bool {
-    return @as(c_int, @bitCast(@as(c_uint, lean_ptr_tag(o)))) == @as(c_int, 254);
+    return lean_ptr_tag(o) == LeanExternal;
 }
 pub fn lean_is_ref(o: LeanPtr) callconv(.C) bool {
-    return @as(c_int, @bitCast(@as(c_uint, lean_ptr_tag(o)))) == @as(c_int, 253);
+    return lean_ptr_tag(o) == LeanRef;
 }
 pub fn lean_obj_tag(o: LeanPtr) callconv(.C) c_uint {
-    if (lean_is_scalar(o)) return @as(c_uint, @bitCast(@as(c_uint, @truncate(lean_unbox(o))))) else return @as(c_uint, @bitCast(@as(c_uint, lean_ptr_tag(o))));
-    return 0;
+    if (lean_is_scalar(o)) return @truncate(lean_unbox(o)) else return lean_ptr_tag(o);
 }
 pub fn lean_to_ctor(o: LeanPtr) callconv(.C) *lean_ctor_object {
     assert(@src(), lean_is_ctor(o), "lean_is_ctor(o)");
-    return @as(*lean_ctor_object, @ptrCast(@alignCast(o)));
+    return @ptrCast(@alignCast(o));
 }
 pub fn lean_to_closure(o: LeanPtr) callconv(.C) *lean_closure_object {
     assert(@src(), lean_is_closure(o), "lean_is_closure(o)");
-    return @as(*lean_closure_object, @ptrCast(@alignCast(o)));
+    return @ptrCast(@alignCast(o));
 }
 pub fn lean_to_array(o: LeanPtr) callconv(.C) ?*lean_array_object {
     assert(@src(), lean_is_array(o), "lean_is_array(o)");
-    return @as(?*lean_array_object, @ptrCast(@alignCast(o)));
+    return @ptrCast(@alignCast(o));
 }
 pub fn lean_to_sarray(o: LeanPtr) callconv(.C) ?*lean_sarray_object {
     assert(@src(), lean_is_sarray(o), "lean_is_sarray(o)");
-    return @as(?*lean_sarray_object, @ptrCast(@alignCast(o)));
+    return @ptrCast(@alignCast(o));
 }
 pub fn lean_to_string(o: LeanPtr) callconv(.C) *lean_string_object {
     assert(@src(), lean_is_string(o), "lean_is_string(o)");
-    return @as(*lean_string_object, @ptrCast(@alignCast(o)));
+    return @ptrCast(@alignCast(o));
 }
 pub fn lean_to_thunk(o: LeanPtr) callconv(.C) *lean_thunk_object {
     assert(@src(), lean_is_thunk(o), "lean_is_thunk(o)");
-    return @as(*lean_thunk_object, @ptrCast(@alignCast(o)));
+    return @ptrCast(@alignCast(o));
 }
 pub fn lean_to_task(o: LeanPtr) callconv(.C) *lean_task_object {
     assert(@src(), lean_is_task(o), "lean_is_task(o)");
-    return @as(*lean_task_object, @ptrCast(@alignCast(o)));
+    return @ptrCast(@alignCast(o));
 }
 pub fn lean_to_ref(o: LeanPtr) callconv(.C) *lean_ref_object {
     assert(@src(), lean_is_ref(o), "lean_is_ref(o)");
-    return @as(*lean_ref_object, @ptrCast(@alignCast(o)));
+    return @ptrCast(@alignCast(o));
 }
 pub fn lean_to_external(o: LeanPtr) callconv(.C) *lean_external_object {
     assert(@src(), lean_is_external(o), "lean_is_external(o)");
-    return @as(*lean_external_object, @ptrCast(@alignCast(o)));
+    return @ptrCast(@alignCast(o));
 }
 pub fn lean_is_exclusive(o: LeanPtr) callconv(.C) bool {
     if (LEAN_LIKELY(lean_is_st(o))) {
@@ -332,17 +325,17 @@ pub fn lean_ctor_num_objs(o: LeanPtr) callconv(.C) c_uint {
     assert(@src(), lean_is_ctor(o), "lean_is_ctor(o)");
     return lean_ptr_other(o);
 }
-pub fn lean_ctor_obj_cptr(o: LeanPtr) callconv(.C) [*c]LeanPtr {
+pub fn lean_ctor_obj_cptr(o: LeanPtr) callconv(.C) [*]LeanPtr {
     assert(@src(), lean_is_ctor(o), "lean_is_ctor(o)");
-    return lean_to_ctor(o).*.m_objs();
+    return lean_to_ctor(o).m_objs();
 }
-pub fn lean_ctor_scalar_cptr(o: LeanPtr) callconv(.C) [*c]u8 {
+pub fn lean_ctor_scalar_cptr(o: LeanPtr) callconv(.C) [*]u8 {
     assert(@src(), lean_is_ctor(o), "lean_is_ctor(o)");
-    return @as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o) + lean_ctor_num_objs(o))));
+    return @ptrCast(lean_ctor_obj_cptr(o) + lean_ctor_num_objs(o));
 }
 pub fn lean_alloc_ctor(tag: c_uint, num_objs: c_uint, scalar_sz: c_uint) callconv(.C) LeanPtr {
     assert(@src(), tag <= LeanMaxCtorTag and num_objs < LEAN_MAX_CTOR_FIELDS and scalar_sz < LEAN_MAX_CTOR_SCALARS_SIZE, "tag <= LeanMaxCtorTag && num_objs < LEAN_MAX_CTOR_FIELDS && scalar_sz < LEAN_MAX_CTOR_SCALARS_SIZE");
-    var o: LeanPtr = lean_alloc_ctor_memory(@as(c_uint, @bitCast(@as(c_uint, @truncate((@sizeOf(lean_ctor_object) +% (@sizeOf(*anyopaque) *% @as(c_ulong, @bitCast(@as(c_ulong, num_objs))))) +% @as(c_ulong, @bitCast(@as(c_ulong, scalar_sz))))))));
+    var o = lean_alloc_ctor_memory(@sizeOf(lean_ctor_object) + @sizeOf(*anyopaque) * num_objs + scalar_sz);
     lean_set_st_header(o, tag, num_objs);
     return o;
 }
@@ -356,7 +349,7 @@ pub fn lean_ctor_set(o: b_lean_obj_arg, i: c_uint, v: lean_obj_arg) callconv(.C)
 }
 pub fn lean_ctor_set_tag(o: b_lean_obj_arg, new_tag: u8) callconv(.C) void {
     assert(@src(), new_tag <= LeanMaxCtorTag, "new_tag <= LeanMaxCtorTag");
-    o.*.m_tag = @as(c_uint, @bitCast(@as(c_uint, new_tag)));
+    o.*.m_tag = new_tag;
 }
 pub fn lean_ctor_release(o: b_lean_obj_arg, i: c_uint) callconv(.C) void {
     assert(@src(), i < lean_ctor_num_objs(o), "i < lean_ctor_num_objs(o)");
@@ -366,51 +359,51 @@ pub fn lean_ctor_release(o: b_lean_obj_arg, i: c_uint) callconv(.C) void {
 }
 pub fn lean_ctor_get_usize(o: b_lean_obj_arg, i: c_uint) callconv(.C) usize {
     assert(@src(), i >= lean_ctor_num_objs(o), "i >= lean_ctor_num_objs(o)");
-    return @as([*c]usize, @ptrCast(@alignCast(lean_ctor_obj_cptr(o) + i))).*;
+    return @as(*usize, @ptrCast(lean_ctor_obj_cptr(o) + i)).*;
 }
 pub fn lean_ctor_get_uint8(o: b_lean_obj_arg, offset: c_uint) callconv(.C) u8 {
     assert(@src(), offset >= lean_ctor_num_objs(o) * @sizeOf(*anyopaque), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
-    return (@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset).*;
+    return @as([*]u8, @ptrCast(lean_ctor_obj_cptr(o)))[offset];
 }
 pub fn lean_ctor_get_uint16(o: b_lean_obj_arg, offset: c_uint) callconv(.C) u16 {
     assert(@src(), offset >= lean_ctor_num_objs(o) * @sizeOf(*anyopaque), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
-    return @as([*c]u16, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).*;
+    return @as(*u16, @ptrCast(@as([*]align(2) u8, @ptrCast(lean_ctor_obj_cptr(o))) + offset)).*;
 }
 pub fn lean_ctor_get_uint32(o: b_lean_obj_arg, offset: c_uint) callconv(.C) u32 {
     assert(@src(), offset >= lean_ctor_num_objs(o) * @sizeOf(*anyopaque), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
-    return @as([*c]u32, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).*;
+    return @as(*u32, @ptrCast(@as([*]align(4) u8, @ptrCast(lean_ctor_obj_cptr(o))) + offset)).*;
 }
 pub fn lean_ctor_get_uint64(o: b_lean_obj_arg, offset: c_uint) callconv(.C) u64 {
     assert(@src(), offset >= lean_ctor_num_objs(o) * @sizeOf(*anyopaque), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
-    return @as([*c]u64, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).*;
+    return @as(*u64, @ptrCast(@as([*]align(4) u8, @ptrCast(lean_ctor_obj_cptr(o))) + offset)).*;
 }
 pub fn lean_ctor_get_float(o: b_lean_obj_arg, offset: c_uint) callconv(.C) f64 {
     assert(@src(), offset >= lean_ctor_num_objs(o) * @sizeOf(*anyopaque), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
-    return @as([*c]f64, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).*;
+    return @as(*f64, @ptrCast(@as([*]align(8) u8, @ptrCast(lean_ctor_obj_cptr(o))) + offset)).*;
 }
 pub fn lean_ctor_set_usize(o: b_lean_obj_arg, i: c_uint, v: usize) callconv(.C) void {
     assert(@src(), i >= lean_ctor_num_objs(o), "i >= lean_ctor_num_objs(o)");
-    @as([*c]usize, @ptrCast(@alignCast(lean_ctor_obj_cptr(o) + i))).* = v;
+    @as(*usize, @ptrCast(lean_ctor_obj_cptr(o) + i)).* = v;
 }
 pub fn lean_ctor_set_uint8(o: b_lean_obj_arg, offset: c_uint, v: u8) callconv(.C) void {
     assert(@src(), offset >= lean_ctor_num_objs(o) * @sizeOf(*anyopaque), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
-    (@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset).* = v;
+    @as([*]u8, @ptrCast(lean_ctor_obj_cptr(o)))[offset] = v;
 }
 pub fn lean_ctor_set_uint16(o: b_lean_obj_arg, offset: c_uint, v: u16) callconv(.C) void {
     assert(@src(), offset >= lean_ctor_num_objs(o) * @sizeOf(*anyopaque), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
-    @as([*c]u16, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).* = v;
+    @as(*u16, @ptrCast(@as([*]align(2) u8, @ptrCast(lean_ctor_obj_cptr(o))) + offset)).* = v;
 }
 pub fn lean_ctor_set_uint32(o: b_lean_obj_arg, offset: c_uint, v: u32) callconv(.C) void {
     assert(@src(), offset >= lean_ctor_num_objs(o) * @sizeOf(*anyopaque), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
-    @as([*c]u32, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).* = v;
+    @as(*u32, @ptrCast(@as([*]align(4) u8, @ptrCast(lean_ctor_obj_cptr(o))) + offset)).* = v;
 }
 pub fn lean_ctor_set_uint64(o: b_lean_obj_arg, offset: c_uint, v: u64) callconv(.C) void {
     assert(@src(), offset >= lean_ctor_num_objs(o) * @sizeOf(*anyopaque), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
-    @as([*c]u64, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).* = v;
+    @as(*u64, @ptrCast(@as([*]align(4) u8, @ptrCast(lean_ctor_obj_cptr(o))) + offset)).* = v;
 }
 pub fn lean_ctor_set_float(o: b_lean_obj_arg, offset: c_uint, v: f64) callconv(.C) void {
     assert(@src(), offset >= lean_ctor_num_objs(o) * @sizeOf(*anyopaque), "offset >= lean_ctor_num_objs(o) * sizeof(void*)");
-    @as([*c]f64, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).* = v;
+    @as(*f64, @ptrCast(@as([*]align(8) u8, @ptrCast(lean_ctor_obj_cptr(o))) + offset)).* = v;
 }
 pub fn lean_closure_fun(o: LeanPtr) callconv(.C) ?*anyopaque {
     return lean_to_closure(o).*.m_fun;
@@ -835,9 +828,9 @@ pub fn lean_thunk_get_own(t: b_lean_obj_arg) callconv(.C) lean_obj_res {
     lean_inc(r);
     return r;
 }
-pub extern fn lean_init_task_manager(...) void;
+pub extern fn lean_init_task_manager() void;
 pub extern fn lean_init_task_manager_using(num_workers: c_uint) void;
-pub extern fn lean_finalize_task_manager(...) void;
+pub extern fn lean_finalize_task_manager() void;
 pub extern fn lean_task_spawn_core(c: lean_obj_arg, prio: c_uint, keep_alive: bool) lean_obj_res;
 pub fn lean_task_spawn(c: lean_obj_arg, prio: lean_obj_arg) callconv(.C) lean_obj_res {
     return lean_task_spawn_core(c, @as(c_uint, @bitCast(@as(c_uint, @truncate(lean_unbox(prio))))), 0 != 0);
@@ -858,7 +851,7 @@ pub fn lean_task_get_own(t: lean_obj_arg) callconv(.C) lean_obj_res {
     lean_dec(t);
     return r;
 }
-pub extern fn lean_io_check_canceled_core(...) bool;
+pub extern fn lean_io_check_canceled_core() bool;
 pub extern fn lean_io_cancel_core(t: b_lean_obj_arg) void;
 pub extern fn lean_io_has_finished_core(t: b_lean_obj_arg) bool;
 pub extern fn lean_io_wait_any_core(task_list: b_lean_obj_arg) b_lean_obj_res;
@@ -1681,7 +1674,7 @@ pub fn lean_io_result_get_error(r: b_lean_obj_arg) callconv(.C) b_lean_obj_res {
     return lean_ctor_get(r, 0);
 }
 pub extern fn lean_io_result_show_error(r: b_lean_obj_arg) void;
-pub extern fn lean_io_mark_end_initialization(...) void;
+pub extern fn lean_io_mark_end_initialization() void;
 pub fn lean_io_result_mk_ok(a: lean_obj_arg) callconv(.C) lean_obj_res {
     var r = lean_alloc_ctor(0, 2, 0);
     lean_ctor_set(r, 0, a);
@@ -1841,10 +1834,10 @@ pub const LEAN_CLOSURE_MAX_ARGS = @as(c_int, 16);
 pub const LEAN_OBJECT_SIZE_DELTA = @as(c_uint, 8);
 pub const LEAN_MAX_SMALL_OBJECT_SIZE = @as(c_int, 4096);
 pub inline fn LEAN_UNLIKELY(x: bool) bool {
-    return __builtin_expect(x, 0);
+    return __builtin_expect(@intFromBool(x), 0) != 0;
 }
 pub inline fn LEAN_LIKELY(x: bool) bool {
-    return __builtin_expect(x, 1);
+    return __builtin_expect(@intFromBool(x), 1) != 0;
 }
 pub inline fn LEAN_BYTE(Var: anytype, Index: anytype) @TypeOf((std.zig.c_translation.cast([*]u8, &Var) + Index).*) {
     return (std.zig.c_translation.cast([*]u8, &Var) + Index).*;
