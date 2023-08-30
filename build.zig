@@ -43,12 +43,14 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
     if (exe.target.isDarwin())
         exe.addLibraryPath(.{ .path = "/usr/local/lib" });
     if (exe.target.isWindows())
-        exe.addLibraryPath(.{ .path = b.pathJoin(
+        exe.addLibraryPath(.{
+        .path = b.pathJoin(
             &.{
                 try lean4prefix(b),
                 "bin",
             },
-        });
+        ),
+    });
     exe.addLibraryPath(.{ .path = try lean4LibDir(b) });
     exe.step.dependOn(&lakeBuild(b, "examples/reverse-ffi/lib").step);
     exe.linkSystemLibrary("leanshared");
