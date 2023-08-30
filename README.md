@@ -15,7 +15,7 @@ Functions and comments manually translated from those in the [`lean.h` header](h
 - **FFI**
 ```bash
 # default: reverse ffi (zig lib => lean4 app)
-$> zig build ffi
+$> zig build zffi
 # output: 3
 ```
 
