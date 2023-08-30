@@ -54,7 +54,10 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
     exe.addLibraryPath(.{ .path = try lean4LibDir(b) });
     exe.step.dependOn(&lakeBuild(b, "examples/reverse-ffi/lib").step);
     exe.linkSystemLibrary("RFFI");    
-    exe.linkSystemLibrary("leanshared");
+    if (exe.target.isWindows())
+        exe.linkSystemLibrary("libleanshared")
+    else
+        exe.linkSystemLibrary("leanshared");
     exe.linkLibC();
 
     b.installArtifact(exe);
