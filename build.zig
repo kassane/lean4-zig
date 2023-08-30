@@ -15,10 +15,6 @@ pub fn build(b: *std.Build) !void {
 
 fn lean4FFI(b: *std.Build) void {
     const lake = b.findProgram(&.{"lake"}, &.{}) catch @panic("lake not found!");
-    const app = b.findProgram(&.{"app"}, &.{
-        "examples/ffi/app/build/bin",
-    }) catch @panic("application not found!");
-    
     const lakebuild = lakeBuild(b, "examples/ffi/app");
     const update = b.addSystemCommand(&.{
         lake,
@@ -26,7 +22,7 @@ fn lean4FFI(b: *std.Build) void {
         "update",
     });
     const run = b.addSystemCommand(&.{
-        app,
+        "examples/ffi/app/build/bin/app",
     });
     lakebuild.step.dependOn(&update.step);
     run.step.dependOn(&lakebuild.step);
