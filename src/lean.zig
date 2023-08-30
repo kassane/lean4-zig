@@ -131,7 +131,7 @@ pub extern fn lean_internal_panic_rc_overflow() noreturn;
 pub fn lean_align(arg_v: usize, arg_a: usize) callconv(.C) usize {
     var v = arg_v;
     var a = arg_a;
-    return ((v / a) *% a) +% (a *% @as(usize, @intFromBool((v % a) != @as(usize, @bitCast(@as(c_long, @as(c_int, 0)))))));
+    return ((v / a) *% a) +% (a *% @as(usize, @intFromBool((v % a) != @as(usize, @intCast(0)))));
 }
 pub fn lean_get_slot_idx(arg_sz: c_uint) callconv(.C) c_uint {
     var sz = arg_sz;
@@ -141,7 +141,7 @@ pub fn lean_get_slot_idx(arg_sz: c_uint) callconv(.C) c_uint {
         }
     }
     {
-        if (__builtin_expect(@as(c_long, @intFromBool(!(lean_align(@as(usize, @bitCast(@as(c_ulong, sz))), @as(usize, @bitCast(@as(c_long, @as(c_int, 8))))) == @as(usize, @bitCast(@as(c_ulong, sz)))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
+        if (__builtin_expect(@as(c_long, @intFromBool(!(lean_align(@as(usize, @intCast(sz)), @as(usize, @intCast(8))) == @as(usize, @intCast(sz))))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
             lean_notify_assert("src/lean.zig", @as(c_int, 309), "lean_align(sz, LEAN_OBJECT_SIZE_DELTA) == sz");
         }
     }
