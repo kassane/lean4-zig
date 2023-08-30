@@ -18,7 +18,7 @@ jobs:
         with:
           version: master
       
-      - name: Setup elan toolchain
+      - name: Setup elan toolchain on Unix-like
         if: (startsWith(matrix.runs-on, 'ubuntu')) || (startsWith(matrix.runs-on, 'macos'))
         run: |
           curl -O --location https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh
@@ -39,13 +39,6 @@ jobs:
           .\elan-init.ps1 -NoPrompt 1 -DefaultToolchain leanprover/lean4:nightly
           echo "Adding location $HOME\.elan\bin to PATH..."
           echo "$HOME\.elan\bin" >> $env:GITHUB_PATH
-      
-      - name: Windows build config
-        if: startsWith(matrix.runs-on, 'windows')
-        shell: pwsh
-        run: |
-          gci -Force $(lean --print-libdir)
-          gci -Force $(lean --print-prefix)/bin
 
       - name: Build Summary ${{ matrix.targets }}
         run: zig build --summary all -freference-trace
