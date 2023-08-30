@@ -20,7 +20,7 @@ target ffi.o pkg : FilePath := do
   buildO "ffi.c" oFile srcJob flags "c"
 
 extern_lib libffi pkg := do
-  proc { cmd := "zig", args := #["build", "-Doptimize=ReleaseFast"], cwd := pkg.dir }
+  proc { cmd := "zig", args := #["build", "-Doptimize=ReleaseSafe"], cwd := pkg.dir }
   let name := nameToStaticLib "zffi"
   -- let ffiO ← fetch <| pkg.target ``ffi.o
   -- buildStaticLib (pkg.nativeLibDir / name) #[ffiO]
