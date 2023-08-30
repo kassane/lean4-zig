@@ -39,19 +39,30 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
     });
     exe.addModule("lean4", b.modules.get("lean4").?);
     exe.addLibraryPath(.{ .path = "examples/reverse-ffi/lib/build/lib" });
-    if (exe.target.isDarwin())
+    exe.addLibraryPath(.{ .path = try lean4LibDir(b) });
+
+    if (exe.target.isDarwin()) {
         exe.addLibraryPath(.{ .path = "/usr/local/lib" });
-    exe.addLibraryPath(.{
+    }
+    exe.addIncludePath(.{
         .path = b.pathJoin(
             &.{
-                try lean4prefix(b),
-                "lib/lean",
+                try lean4Prefix(b),
+                "include",
             },
         ),
     });
     exe.step.dependOn(&lakeBuild(b, "examples/reverse-ffi/lib").step);
-    exe.linkSystemLibrary("RFFI");
-    exe.linkSystemLibrary("leanshared");
+
+    // static obj
+    exe.addCSourceFile(.{ .file = .{ .path = "examples/reverse-ffi/lib/build/ir/RFFI.c" }, .flags = &.{} });
+    if (exe.target.isWindows()) {
+        //exe.linkSystemLibraryName("RFFI.dll"); // not found "libRFFI.dll.a"
+        exe.linkSystemLibraryName("leanshared.dll");
+    } else {
+        // exe.linkSystemLibrary("RFFI"); // sharedlib
+        exe.linkSystemLibrary("leanshared");
+    }
     exe.linkLibC();
 
     b.installArtifact(exe);
@@ -75,7 +86,19 @@ fn lakeBuild(b: *std.Build, path: []const u8) *std.Build.Step.Run {
     return run;
 }
 
-fn lean4prefix(b: *std.Build) ![]const u8 {
+fn lean4LibDir(b: *std.Build) ![]const u8 {
+    const lean = try b.findProgram(&.{"lean"}, &.{});
+    const run = try std.ChildProcess.exec(.{
+        .allocator = b.allocator,
+        .argv = &.{
+            lean,
+            "--print-libdir",
+        },
+    });
+    var out = std.mem.split(u8, run.stdout, "\n"); // remove newline
+    return out.first();
+}
+fn lean4Prefix(b: *std.Build) ![]const u8 {
     const lean = try b.findProgram(&.{"lean"}, &.{});
     const run = try std.ChildProcess.exec(.{
         .allocator = b.allocator,
