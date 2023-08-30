@@ -1,3 +1,4 @@
+const FlexibleArrayType = std.zig.c_translation.FlexibleArrayType;
 pub const __builtin_expect = std.zig.c_builtins.__builtin_expect;
 
 pub extern fn lean_notify_assert(fileName: [*:0]const u8, line: c_int, condition: [*:0]const u8) void;
@@ -19,9 +20,9 @@ pub const lean_obj_res = LeanPtr;
 pub const b_lean_obj_res = LeanPtr;
 pub const lean_ctor_object = extern struct {
     m_header: lean_object align(8),
-    pub fn m_objs(self: anytype) std.zig.c_translation.FlexibleArrayType(@TypeOf(self), LeanPtr) {
-        const Intermediate = std.zig.c_translation.FlexibleArrayType(@TypeOf(self), u8);
-        const ReturnType = std.zig.c_translation.FlexibleArrayType(@TypeOf(self), LeanPtr);
+    pub fn m_objs(self: anytype) FlexibleArrayType(@TypeOf(self), LeanPtr) {
+        const Intermediate = FlexibleArrayType(@TypeOf(self), u8);
+        const ReturnType = FlexibleArrayType(@TypeOf(self), LeanPtr);
         return @as(ReturnType, @ptrCast(@alignCast(@as(Intermediate, @ptrCast(self)) + 8)));
     }
 };
@@ -29,9 +30,9 @@ pub const lean_array_object = extern struct {
     m_header: lean_object align(8),
     m_size: usize,
     m_capacity: usize,
-    pub fn m_data(self: anytype) std.zig.c_translation.FlexibleArrayType(@TypeOf(self), LeanPtr) {
-        const Intermediate = std.zig.c_translation.FlexibleArrayType(@TypeOf(self), u8);
-        const ReturnType = std.zig.c_translation.FlexibleArrayType(@TypeOf(self), LeanPtr);
+    pub fn m_data(self: anytype) FlexibleArrayType(@TypeOf(self), LeanPtr) {
+        const Intermediate = FlexibleArrayType(@TypeOf(self), u8);
+        const ReturnType = FlexibleArrayType(@TypeOf(self), LeanPtr);
         return @as(ReturnType, @ptrCast(@alignCast(@as(Intermediate, @ptrCast(self)) + 24)));
     }
 };
@@ -39,9 +40,9 @@ pub const lean_sarray_object = extern struct {
     m_header: lean_object align(8),
     m_size: usize,
     m_capacity: usize,
-    pub fn m_data(self: anytype) std.zig.c_translation.FlexibleArrayType(@TypeOf(self), u8) {
-        const Intermediate = std.zig.c_translation.FlexibleArrayType(@TypeOf(self), u8);
-        const ReturnType = std.zig.c_translation.FlexibleArrayType(@TypeOf(self), u8);
+    pub fn m_data(self: anytype) FlexibleArrayType(@TypeOf(self), u8) {
+        const Intermediate = FlexibleArrayType(@TypeOf(self), u8);
+        const ReturnType = FlexibleArrayType(@TypeOf(self), u8);
         return @as(ReturnType, @ptrCast(@alignCast(@as(Intermediate, @ptrCast(self)) + 24)));
     }
 };
@@ -50,9 +51,9 @@ pub const lean_string_object = extern struct {
     m_size: usize,
     m_capacity: usize,
     m_length: usize,
-    pub fn m_data(self: anytype) std.zig.c_translation.FlexibleArrayType(@TypeOf(self), u8) {
-        const Intermediate = std.zig.c_translation.FlexibleArrayType(@TypeOf(self), u8);
-        const ReturnType = std.zig.c_translation.FlexibleArrayType(@TypeOf(self), u8);
+    pub fn m_data(self: anytype) FlexibleArrayType(@TypeOf(self), u8) {
+        const Intermediate = FlexibleArrayType(@TypeOf(self), u8);
+        const ReturnType = FlexibleArrayType(@TypeOf(self), u8);
         return @as(ReturnType, @ptrCast(@alignCast(@as(Intermediate, @ptrCast(self)) + 32)));
     }
 };
@@ -61,9 +62,9 @@ pub const lean_closure_object = extern struct {
     m_fun: ?*anyopaque,
     m_arity: u16,
     m_num_fixed: u16,
-    pub fn m_objs(self: anytype) std.zig.c_translation.FlexibleArrayType(@TypeOf(self), LeanPtr) {
-        const Intermediate = std.zig.c_translation.FlexibleArrayType(@TypeOf(self), u8);
-        const ReturnType = std.zig.c_translation.FlexibleArrayType(@TypeOf(self), LeanPtr);
+    pub fn m_objs(self: anytype) FlexibleArrayType(@TypeOf(self), LeanPtr) {
+        const Intermediate = FlexibleArrayType(@TypeOf(self), u8);
+        const ReturnType = FlexibleArrayType(@TypeOf(self), LeanPtr);
         return @as(ReturnType, @ptrCast(@alignCast(@as(Intermediate, @ptrCast(self)) + 24)));
     }
 };
@@ -73,13 +74,13 @@ pub const lean_ref_object = extern struct {
 };
 pub const lean_thunk_object = extern struct {
     m_header: lean_object,
-    m_value: LeanPtr,
-    m_closure: LeanPtr,
+    m_value: LeanPtr, // atomic
+    m_closure: LeanPtr, // atomic
 };
 pub const struct_lean_task = extern struct {
     m_header: lean_object,
-    m_value: LeanPtr,
-    m_imp: [*c]lean_task_imp,
+    m_value: LeanPtr, // atomic
+    m_imp: *lean_task_imp,
 };
 pub const lean_task_imp = extern struct {
     m_closure: LeanPtr,
@@ -97,10 +98,10 @@ pub const lean_external_class = extern struct {
     m_finalize: lean_external_finalize_proc,
     m_foreach: lean_external_foreach_proc,
 };
-pub extern fn lean_register_external_class(lean_external_finalize_proc, lean_external_foreach_proc) [*c]lean_external_class;
+pub extern fn lean_register_external_class(lean_external_finalize_proc, lean_external_foreach_proc) *lean_external_class;
 pub const lean_external_object = extern struct {
     m_header: lean_object,
-    m_class: [*c]lean_external_class,
+    m_class: *lean_external_class,
     m_data: ?*anyopaque,
 };
 pub fn lean_is_scalar(o: LeanPtr) callconv(.C) bool {
@@ -115,7 +116,7 @@ pub fn lean_unbox(o: LeanPtr) callconv(.C) usize {
 pub extern fn lean_set_exit_on_panic(flag: bool) void;
 pub extern fn lean_set_panic_messages(flag: bool) void;
 pub extern fn lean_panic_fn(default_val: LeanPtr, msg: LeanPtr) LeanPtr;
-pub extern fn lean_internal_panic(msg: [*c]const u8) noreturn;
+pub extern fn lean_internal_panic(msg: [*:0]const u8) noreturn;
 pub extern fn lean_internal_panic_out_of_memory(...) noreturn;
 pub extern fn lean_internal_panic_unreachable(...) noreturn;
 pub extern fn lean_internal_panic_rc_overflow(...) noreturn;
@@ -162,10 +163,13 @@ pub fn lean_alloc_ctor_memory(sz: c_uint) callconv(.C) LeanPtr {
     //var r: LeanPtr = @as(LeanPtr, @ptrCast(lean_alloc_small(sz1, slot_idx)));
     var r: LeanPtr = @as(LeanPtr, @ptrCast(@alignCast(lean_alloc_small(sz1, slot_idx))));
     if (sz1 > sz) {
-        var end: [*c]usize = @as([*c]usize, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(r))) + sz1)));
+        var end: [*]usize = @as([*]usize, @ptrCast(@alignCast(@as([*]u8, @ptrCast(r)) + sz1)));
         (blk: {
             const tmp = -@as(c_int, 1);
-            if (tmp >= 0) break :blk end + @as(usize, @intCast(tmp)) else break :blk end - ~@as(usize, @bitCast(@as(isize, @intCast(tmp)) +% -1));
+            if (tmp >= 0)
+                break :blk end + @as(usize, @intCast(tmp))
+            else
+                break :blk end - ~@as(usize, @bitCast(@as(isize, @intCast(tmp)) +% -1));
         }).* = 0;
     }
     return r;
@@ -198,7 +202,7 @@ pub fn lean_is_persistent(o: LeanPtr) callconv(.C) bool {
 pub fn lean_has_rc(o: LeanPtr) callconv(.C) bool {
     return o.*.m_rc != @as(c_int, 0);
 }
-pub fn lean_get_rc_mt_addr(o: LeanPtr) callconv(.C) [*c]c_int {
+pub fn lean_get_rc_mt_addr(o: LeanPtr) callconv(.C) *c_int { // atomic
     return &o.*.m_rc;
 }
 pub extern fn lean_inc_ref_cold(o: LeanPtr) void;
@@ -275,21 +279,21 @@ pub fn lean_obj_tag(o: LeanPtr) callconv(.C) c_uint {
     if (lean_is_scalar(o)) return @as(c_uint, @bitCast(@as(c_uint, @truncate(lean_unbox(o))))) else return @as(c_uint, @bitCast(@as(c_uint, lean_ptr_tag(o))));
     return 0;
 }
-pub fn lean_to_ctor(o: LeanPtr) callconv(.C) ?*lean_ctor_object {
+pub fn lean_to_ctor(o: LeanPtr) callconv(.C) *lean_ctor_object {
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_ctor(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
             lean_notify_assert("src/lean.zig", @as(c_int, 471), "lean_is_ctor(o)");
         }
     }
-    return @as(?*lean_ctor_object, @ptrCast(@alignCast(o)));
+    return @as(*lean_ctor_object, @ptrCast(@alignCast(o)));
 }
-pub fn lean_to_closure(o: LeanPtr) callconv(.C) ?*lean_closure_object {
+pub fn lean_to_closure(o: LeanPtr) callconv(.C) *lean_closure_object {
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_closure(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
             lean_notify_assert("src/lean.zig", @as(c_int, 472), "lean_is_closure(o)");
         }
     }
-    return @as(?*lean_closure_object, @ptrCast(@alignCast(o)));
+    return @as(*lean_closure_object, @ptrCast(@alignCast(o)));
 }
 pub fn lean_to_array(o: LeanPtr) callconv(.C) ?*lean_array_object {
     {
@@ -307,45 +311,45 @@ pub fn lean_to_sarray(o: LeanPtr) callconv(.C) ?*lean_sarray_object {
     }
     return @as(?*lean_sarray_object, @ptrCast(@alignCast(o)));
 }
-pub fn lean_to_string(o: LeanPtr) callconv(.C) ?*lean_string_object {
+pub fn lean_to_string(o: LeanPtr) callconv(.C) *lean_string_object {
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_string(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
             lean_notify_assert("src/lean.zig", @as(c_int, 475), "lean_is_string(o)");
         }
     }
-    return @as(?*lean_string_object, @ptrCast(@alignCast(o)));
+    return @as(*lean_string_object, @ptrCast(@alignCast(o)));
 }
-pub fn lean_to_thunk(o: LeanPtr) callconv(.C) ?*lean_thunk_object {
+pub fn lean_to_thunk(o: LeanPtr) callconv(.C) *lean_thunk_object {
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_thunk(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
             lean_notify_assert("src/lean.zig", @as(c_int, 476), "lean_is_thunk(o)");
         }
     }
-    return @as(?*lean_thunk_object, @ptrCast(@alignCast(o)));
+    return @as(*lean_thunk_object, @ptrCast(@alignCast(o)));
 }
-pub fn lean_to_task(o: LeanPtr) callconv(.C) ?*lean_task_object {
+pub fn lean_to_task(o: LeanPtr) callconv(.C) *lean_task_object {
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_task(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
             lean_notify_assert("src/lean.zig", @as(c_int, 477), "lean_is_task(o)");
         }
     }
-    return @as(?*lean_task_object, @ptrCast(@alignCast(o)));
+    return @as(*lean_task_object, @ptrCast(@alignCast(o)));
 }
-pub fn lean_to_ref(o: LeanPtr) callconv(.C) ?*lean_ref_object {
+pub fn lean_to_ref(o: LeanPtr) callconv(.C) *lean_ref_object {
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_ref(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
             lean_notify_assert("src/lean.zig", @as(c_int, 478), "lean_is_ref(o)");
         }
     }
-    return @as(?*lean_ref_object, @ptrCast(@alignCast(o)));
+    return @as(*lean_ref_object, @ptrCast(@alignCast(o)));
 }
-pub fn lean_to_external(o: LeanPtr) callconv(.C) ?*lean_external_object {
+pub fn lean_to_external(o: LeanPtr) callconv(.C) *lean_external_object {
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_external(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
             lean_notify_assert("src/lean.zig", @as(c_int, 479), "lean_is_external(o)");
         }
     }
-    return @as(?*lean_external_object, @ptrCast(@alignCast(o)));
+    return @as(*lean_external_object, @ptrCast(@alignCast(o)));
 }
 pub fn lean_is_exclusive(o: LeanPtr) callconv(.C) bool {
     if (__builtin_expect(@as(c_long, @intFromBool(lean_is_st(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 1))))) != 0) {
@@ -409,7 +413,7 @@ pub fn lean_ctor_obj_cptr(o: LeanPtr) callconv(.C) [*c]LeanPtr {
             lean_notify_assert("src/lean.zig", @as(c_int, 532), "lean_is_ctor(o)");
         }
     }
-    return lean_to_ctor(o).?.*.m_objs();
+    return lean_to_ctor(o).*.m_objs();
 }
 pub fn lean_ctor_scalar_cptr(o: LeanPtr) callconv(.C) [*c]u8 {
     {
@@ -560,16 +564,16 @@ pub fn lean_ctor_set_float(o: b_lean_obj_arg, offset: c_uint, v: f64) callconv(.
     @as([*c]f64, @ptrCast(@alignCast(@as([*c]u8, @ptrCast(@alignCast(lean_ctor_obj_cptr(o)))) + offset))).* = v;
 }
 pub fn lean_closure_fun(o: LeanPtr) callconv(.C) ?*anyopaque {
-    return lean_to_closure(o).?.*.m_fun;
+    return lean_to_closure(o).*.m_fun;
 }
 pub fn lean_closure_arity(o: LeanPtr) callconv(.C) c_uint {
-    return @as(c_uint, @bitCast(@as(c_uint, lean_to_closure(o).?.*.m_arity)));
+    return @as(c_uint, @bitCast(@as(c_uint, lean_to_closure(o).*.m_arity)));
 }
 pub fn lean_closure_num_fixed(o: LeanPtr) callconv(.C) c_uint {
-    return @as(c_uint, @bitCast(@as(c_uint, lean_to_closure(o).?.*.m_num_fixed)));
+    return @as(c_uint, @bitCast(@as(c_uint, lean_to_closure(o).*.m_num_fixed)));
 }
 pub fn lean_closure_cptr(o: LeanPtr) callconv(.C) [*c]LeanPtr {
-    return lean_to_closure(o).?.*.m_objs();
+    return lean_to_closure(o).*.m_objs();
 }
 pub fn lean_alloc_closure(fun: ?*anyopaque, arity: c_uint, num_fixed: c_uint) callconv(.C) lean_obj_res {
     {
@@ -582,7 +586,7 @@ pub fn lean_alloc_closure(fun: ?*anyopaque, arity: c_uint, num_fixed: c_uint) ca
             lean_notify_assert("src/lean.zig", @as(c_int, 638), "num_fixed < arity");
         }
     }
-    var o: ?*lean_closure_object = @as(?*lean_closure_object, @ptrCast(@alignCast(lean_alloc_small_object(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(lean_closure_object) +% (@sizeOf(?*anyopaque) *% @as(c_ulong, @bitCast(@as(c_ulong, num_fixed))))))))))));
+    var o: *lean_closure_object = @as(*lean_closure_object, @ptrCast(@alignCast(lean_alloc_small_object(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(lean_closure_object) +% (@sizeOf(?*anyopaque) *% @as(c_ulong, @bitCast(@as(c_ulong, num_fixed))))))))))));
     lean_set_st_header(@as(LeanPtr, @ptrCast(o)), @as(c_uint, @bitCast(@as(c_int, 245))), @as(c_uint, @bitCast(@as(c_int, 0))));
     o.*.m_fun = fun;
     o.*.m_arity = @as(u16, @bitCast(@as(c_ushort, @truncate(arity))));
@@ -595,7 +599,7 @@ pub fn lean_closure_get(o: b_lean_obj_arg, i: c_uint) callconv(.C) b_lean_obj_re
             lean_notify_assert("src/lean.zig", @as(c_int, 647), "i < lean_closure_num_fixed(o)");
         }
     }
-    return lean_to_closure(o).?.*.m_objs()[i];
+    return lean_to_closure(o).*.m_objs()[i];
 }
 pub fn lean_closure_set(o: u_lean_obj_arg, i: c_uint, a: lean_obj_arg) callconv(.C) void {
     {
@@ -603,7 +607,7 @@ pub fn lean_closure_set(o: u_lean_obj_arg, i: c_uint, a: lean_obj_arg) callconv(
             lean_notify_assert("src/lean.zig", @as(c_int, 651), "i < lean_closure_num_fixed(o)");
         }
     }
-    lean_to_closure(o).?.*.m_objs()[i] = a;
+    lean_to_closure(o).*.m_objs()[i] = a;
 }
 pub extern fn lean_apply_1(f: LeanPtr, a1: LeanPtr) LeanPtr;
 pub extern fn lean_apply_2(f: LeanPtr, a1: LeanPtr, a2: LeanPtr) LeanPtr;
@@ -631,16 +635,16 @@ pub fn lean_alloc_array(size: usize, capacity: usize) callconv(.C) lean_obj_res 
     return @as(LeanPtr, @ptrCast(o));
 }
 pub fn lean_array_size(o: b_lean_obj_arg) callconv(.C) usize {
-    return lean_to_array(o).?.*.m_size;
+    return lean_to_array(o).*.m_size;
 }
 pub fn lean_array_capacity(o: b_lean_obj_arg) callconv(.C) usize {
-    return lean_to_array(o).?.*.m_capacity;
+    return lean_to_array(o).*.m_capacity;
 }
 pub fn lean_array_byte_size(o: LeanPtr) callconv(.C) usize {
     return @sizeOf(lean_array_object) +% (@sizeOf(?*anyopaque) *% lean_array_capacity(o));
 }
 pub fn lean_array_cptr(o: LeanPtr) callconv(.C) [*c]LeanPtr {
-    return lean_to_array(o).?.*.m_data();
+    return lean_to_array(o).*.m_data();
 }
 pub fn lean_array_set_size(o: u_lean_obj_arg, sz: usize) callconv(.C) void {
     {
@@ -658,7 +662,7 @@ pub fn lean_array_set_size(o: u_lean_obj_arg, sz: usize) callconv(.C) void {
             lean_notify_assert("src/lean.zig", @as(c_int, 692), "sz <= lean_array_capacity(o)");
         }
     }
-    lean_to_array(o).?.*.m_size = sz;
+    lean_to_array(o).*.m_size = sz;
 }
 pub fn lean_array_get_core(o: b_lean_obj_arg, i: usize) callconv(.C) b_lean_obj_res {
     {
@@ -666,7 +670,7 @@ pub fn lean_array_get_core(o: b_lean_obj_arg, i: usize) callconv(.C) b_lean_obj_
             lean_notify_assert("src/lean.zig", @as(c_int, 696), "i < lean_array_size(o)");
         }
     }
-    return lean_to_array(o).?.*.m_data()[i];
+    return lean_to_array(o).*.m_data()[i];
 }
 pub fn lean_array_set_core(o: u_lean_obj_arg, i: usize, v: lean_obj_arg) callconv(.C) void {
     {
@@ -679,7 +683,7 @@ pub fn lean_array_set_core(o: u_lean_obj_arg, i: usize, v: lean_obj_arg) callcon
             lean_notify_assert("src/lean.zig", @as(c_int, 703), "i < lean_array_size(o)");
         }
     }
-    lean_to_array(o).?.*.m_data()[i] = v;
+    lean_to_array(o).*.m_data()[i] = v;
 }
 pub extern fn lean_array_mk(l: lean_obj_arg) LeanPtr;
 pub extern fn lean_array_data(a: lean_obj_arg) LeanPtr;
@@ -793,13 +797,13 @@ pub fn lean_sarray_elem_size(o: LeanPtr) callconv(.C) c_uint {
     return lean_ptr_other(o);
 }
 pub fn lean_sarray_capacity(o: LeanPtr) callconv(.C) usize {
-    return lean_to_sarray(o).?.*.m_capacity;
+    return lean_to_sarray(o).*.m_capacity;
 }
 pub fn lean_sarray_byte_size(o: LeanPtr) callconv(.C) usize {
     return @sizeOf(lean_sarray_object) +% (@as(usize, @bitCast(@as(c_ulong, lean_sarray_elem_size(o)))) *% lean_sarray_capacity(o));
 }
 pub fn lean_sarray_size(o: b_lean_obj_arg) callconv(.C) usize {
-    return lean_to_sarray(o).?.*.m_size;
+    return lean_to_sarray(o).*.m_size;
 }
 pub fn lean_sarray_set_size(o: u_lean_obj_arg, sz: usize) callconv(.C) void {
     {
@@ -812,10 +816,10 @@ pub fn lean_sarray_set_size(o: u_lean_obj_arg, sz: usize) callconv(.C) void {
             lean_notify_assert("src/lean.zig", @as(c_int, 847), "sz <= lean_sarray_capacity(o)");
         }
     }
-    lean_to_sarray(o).?.*.m_size = sz;
+    lean_to_sarray(o).*.m_size = sz;
 }
 pub fn lean_sarray_cptr(o: LeanPtr) callconv(.C) [*c]u8 {
-    return lean_to_sarray(o).?.*.m_data();
+    return lean_to_sarray(o).*.m_data();
 }
 pub extern fn lean_byte_array_mk(a: lean_obj_arg) lean_obj_res;
 pub extern fn lean_byte_array_data(a: lean_obj_arg) lean_obj_res;
@@ -937,17 +941,17 @@ pub fn lean_float_array_set(a: lean_obj_arg, i: b_lean_obj_arg, d: f64) callconv
     return std.mem.zeroes(lean_obj_res);
 }
 pub fn lean_alloc_string(size: usize, capacity: usize, len: usize) callconv(.C) lean_obj_res {
-    var o: ?*lean_string_object = @as(?*lean_string_object, @ptrCast(@alignCast(lean_alloc_object(@sizeOf(lean_string_object) +% capacity))));
+    var o: *lean_string_object = @as(*lean_string_object, @ptrCast(@alignCast(lean_alloc_object(@sizeOf(lean_string_object) +% capacity))));
     lean_set_st_header(@as(LeanPtr, @ptrCast(o)), @as(c_uint, @bitCast(@as(c_int, 249))), @as(c_uint, @bitCast(@as(c_int, 0))));
     o.*.m_size = size;
     o.*.m_capacity = capacity;
     o.*.m_length = len;
     return @as(LeanPtr, @ptrCast(o));
 }
-pub extern fn lean_utf8_strlen(str: [*c]const u8) usize;
-pub extern fn lean_utf8_n_strlen(str: [*c]const u8, n: usize) usize;
+pub extern fn lean_utf8_strlen(str: [*:0]const u8) usize;
+pub extern fn lean_utf8_n_strlen(str: [*:0]const u8, n: usize) usize;
 pub fn lean_string_capacity(o: LeanPtr) callconv(.C) usize {
-    return lean_to_string(o).?.*.m_capacity;
+    return lean_to_string(o).*.m_capacity;
 }
 pub fn lean_string_byte_size(o: LeanPtr) callconv(.C) usize {
     return @sizeOf(lean_string_object) +% lean_string_capacity(o);
@@ -955,21 +959,21 @@ pub fn lean_string_byte_size(o: LeanPtr) callconv(.C) usize {
 pub fn lean_char_default_value() callconv(.C) u32 {
     return 'A';
 }
-pub extern fn lean_mk_string_from_bytes(s: [*c]const u8, sz: usize) lean_obj_res;
-pub extern fn lean_mk_string(s: [*c]const u8) lean_obj_res;
-pub fn lean_string_cstr(o: b_lean_obj_arg) callconv(.C) [*c]const u8 {
+pub extern fn lean_mk_string_from_bytes(s: [*:0]const u8, sz: usize) lean_obj_res;
+pub extern fn lean_mk_string(s: [*:0]const u8) lean_obj_res;
+pub fn lean_string_cstr(o: b_lean_obj_arg) callconv(.C) [*:0]const u8 {
     {
         if (__builtin_expect(@as(c_long, @intFromBool(!lean_is_string(o))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 0))))) != 0) {
             lean_notify_assert("src/lean.zig", @as(c_int, 998), "lean_is_string(o)");
         }
     }
-    return lean_to_string(o).?.*.m_data();
+    return lean_to_string(o).*.m_data();
 }
 pub fn lean_string_size(o: b_lean_obj_arg) callconv(.C) usize {
-    return lean_to_string(o).?.*.m_size;
+    return lean_to_string(o).*.m_size;
 }
 pub fn lean_string_len(o: b_lean_obj_arg) callconv(.C) usize {
-    return lean_to_string(o).?.*.m_length;
+    return lean_to_string(o).*.m_length;
 }
 pub extern fn lean_string_push(s: lean_obj_arg, c: u32) lean_obj_res;
 pub extern fn lean_string_append(s1: lean_obj_arg, s2: b_lean_obj_arg) lean_obj_res;
@@ -979,9 +983,9 @@ pub fn lean_string_length(s: b_lean_obj_arg) callconv(.C) lean_obj_res {
 pub extern fn lean_string_mk(cs: lean_obj_arg) lean_obj_res;
 pub extern fn lean_string_data(s: lean_obj_arg) lean_obj_res;
 pub extern fn lean_string_utf8_get(s: b_lean_obj_arg, i: b_lean_obj_arg) u32;
-pub extern fn lean_string_utf8_get_fast_cold(str: [*c]const u8, i: usize, size: usize, c: u8) u32;
+pub extern fn lean_string_utf8_get_fast_cold(str: [*:0]const u8, i: usize, size: usize, c: u8) u32;
 pub fn lean_string_utf8_get_fast(s: b_lean_obj_arg, i: b_lean_obj_arg) callconv(.C) u32 {
-    var str: [*c]const u8 = lean_string_cstr(s);
+    var str: [*:0]const u8 = lean_string_cstr(s);
     var idx: usize = lean_unbox(i);
     var c: u8 = @as(u8, @bitCast(str[idx]));
     if ((@as(c_int, @bitCast(@as(c_uint, c))) & @as(c_int, 128)) == @as(c_int, 0)) return @as(u32, @bitCast(@as(c_uint, c)));
@@ -990,7 +994,7 @@ pub fn lean_string_utf8_get_fast(s: b_lean_obj_arg, i: b_lean_obj_arg) callconv(
 pub extern fn lean_string_utf8_next(s: b_lean_obj_arg, i: b_lean_obj_arg) lean_obj_res;
 pub extern fn lean_string_utf8_next_fast_cold(i: usize, c: u8) lean_obj_res;
 pub fn lean_string_utf8_next_fast(s: b_lean_obj_arg, i: b_lean_obj_arg) callconv(.C) lean_obj_res {
-    var str: [*c]const u8 = lean_string_cstr(s);
+    var str: [*:0]const u8 = lean_string_cstr(s);
     var idx: usize = lean_unbox(i);
     var c: u8 = @as(u8, @bitCast(str[idx]));
     if ((@as(c_int, @bitCast(@as(c_uint, c))) & @as(c_int, 128)) == @as(c_int, 0)) return lean_box(idx +% @as(usize, @bitCast(@as(c_long, @as(c_int, 1)))));
@@ -1021,14 +1025,14 @@ pub fn lean_string_dec_lt(s1: b_lean_obj_arg, s2: b_lean_obj_arg) callconv(.C) u
 }
 pub extern fn lean_string_hash(b_lean_obj_arg) u64;
 pub fn lean_mk_thunk(c: lean_obj_arg) callconv(.C) lean_obj_res {
-    var o: ?*lean_thunk_object = @as(?*lean_thunk_object, @ptrCast(@alignCast(lean_alloc_small_object(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(lean_thunk_object)))))))));
+    var o: *lean_thunk_object = @as(*lean_thunk_object, @ptrCast(@alignCast(lean_alloc_small_object(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(lean_thunk_object)))))))));
     lean_set_st_header(@as(LeanPtr, @ptrCast(o)), @as(c_uint, @bitCast(@as(c_int, 251))), @as(c_uint, @bitCast(@as(c_int, 0))));
     o.*.m_value = @as(LeanPtr, @ptrFromInt(@as(c_int, 0)));
     o.*.m_closure = c;
     return @as(LeanPtr, @ptrCast(o));
 }
 pub fn lean_thunk_pure(v: lean_obj_arg) callconv(.C) lean_obj_res {
-    var o: ?*lean_thunk_object = @as(?*lean_thunk_object, @ptrCast(@alignCast(lean_alloc_small_object(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(lean_thunk_object)))))))));
+    var o: *lean_thunk_object = @as(*lean_thunk_object, @ptrCast(@alignCast(lean_alloc_small_object(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(lean_thunk_object)))))))));
     lean_set_st_header(@as(LeanPtr, @ptrCast(o)), @as(c_uint, @bitCast(@as(c_int, 251))), @as(c_uint, @bitCast(@as(c_int, 0))));
     o.*.m_value = v;
     o.*.m_closure = @as(LeanPtr, @ptrFromInt(@as(c_int, 0)));
@@ -1073,17 +1077,17 @@ pub extern fn lean_io_cancel_core(t: b_lean_obj_arg) void;
 pub extern fn lean_io_has_finished_core(t: b_lean_obj_arg) bool;
 pub extern fn lean_io_wait_any_core(task_list: b_lean_obj_arg) b_lean_obj_res;
 pub fn lean_alloc_external(cls: [*c]lean_external_class, data: ?*anyopaque) callconv(.C) LeanPtr {
-    var o: ?*lean_external_object = @as(?*lean_external_object, @ptrCast(@alignCast(lean_alloc_small_object(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(lean_external_object)))))))));
+    var o: *lean_external_object = @as(*lean_external_object, @ptrCast(@alignCast(lean_alloc_small_object(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(lean_external_object)))))))));
     lean_set_st_header(@as(LeanPtr, @ptrCast(o)), @as(c_uint, @bitCast(@as(c_int, 254))), @as(c_uint, @bitCast(@as(c_int, 0))));
     o.*.m_class = cls;
     o.*.m_data = data;
     return @as(LeanPtr, @ptrCast(o));
 }
 pub fn lean_get_external_class(o: LeanPtr) callconv(.C) [*c]lean_external_class {
-    return lean_to_external(o).?.*.m_class;
+    return lean_to_external(o).*.m_class;
 }
 pub fn lean_get_external_data(o: LeanPtr) callconv(.C) ?*anyopaque {
-    return lean_to_external(o).?.*.m_data;
+    return lean_to_external(o).*.m_data;
 }
 pub extern fn lean_nat_big_succ(a: LeanPtr) LeanPtr;
 pub extern fn lean_nat_big_add(a1: LeanPtr, a2: LeanPtr) LeanPtr;
@@ -1098,7 +1102,7 @@ pub extern fn lean_nat_big_lt(a1: LeanPtr, a2: LeanPtr) bool;
 pub extern fn lean_nat_big_land(a1: LeanPtr, a2: LeanPtr) LeanPtr;
 pub extern fn lean_nat_big_lor(a1: LeanPtr, a2: LeanPtr) LeanPtr;
 pub extern fn lean_nat_big_xor(a1: LeanPtr, a2: LeanPtr) LeanPtr;
-pub extern fn lean_cstr_to_nat(n: [*c]const u8) lean_obj_res;
+pub extern fn lean_cstr_to_nat(n: [*:0]const u8) lean_obj_res;
 pub extern fn lean_big_usize_to_nat(n: usize) lean_obj_res;
 pub extern fn lean_big_uint64_to_nat(n: u64) lean_obj_res;
 pub fn lean_usize_to_nat(n: usize) callconv(.C) lean_obj_res {
@@ -1237,7 +1241,7 @@ pub extern fn lean_int_big_eq(a1: LeanPtr, a2: LeanPtr) bool;
 pub extern fn lean_int_big_le(a1: LeanPtr, a2: LeanPtr) bool;
 pub extern fn lean_int_big_lt(a1: LeanPtr, a2: LeanPtr) bool;
 pub extern fn lean_int_big_nonneg(a: LeanPtr) bool;
-pub extern fn lean_cstr_to_int(n: [*c]const u8) LeanPtr;
+pub extern fn lean_cstr_to_int(n: [*:0]const u8) LeanPtr;
 pub extern fn lean_big_int_to_int(n: c_int) LeanPtr;
 pub extern fn lean_big_size_t_to_int(n: usize) LeanPtr;
 pub extern fn lean_big_int64_to_int(n: i64) LeanPtr;
@@ -2069,8 +2073,8 @@ pub inline fn LEAN_UNLIKELY(x: anytype) @TypeOf(__builtin_expect(x, @as(c_int, 0
 pub inline fn LEAN_LIKELY(x: anytype) @TypeOf(__builtin_expect(x, @as(c_int, 1))) {
     return __builtin_expect(x, @as(c_int, 1));
 }
-pub inline fn LEAN_BYTE(Var: anytype, Index: anytype) @TypeOf((std.zig.c_translation.cast([*c]u8, &Var) + Index).*) {
-    return (std.zig.c_translation.cast([*c]u8, &Var) + Index).*;
+pub inline fn LEAN_BYTE(Var: anytype, Index: anytype) @TypeOf((std.zig.c_translation.cast([*]u8, &Var) + Index).*) {
+    return (std.zig.c_translation.cast([*]u8, &Var) + Index).*;
 }
 pub const LeanMaxCtorTag = @as(c_int, 244);
 pub const LeanClosure = @as(c_int, 245);
