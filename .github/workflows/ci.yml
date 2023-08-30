@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 0
       - uses: goto-bus-stop/setup-zig@v2
         with:
-          version: master
+          version: 0.11.0
       
       - name: Setup elan toolchain on Unix-like
         if: (startsWith(matrix.runs-on, 'ubuntu')) || (startsWith(matrix.runs-on, 'macos'))
