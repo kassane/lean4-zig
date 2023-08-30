@@ -55,7 +55,7 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
     exe.step.dependOn(&lakeBuild(b, "examples/reverse-ffi/lib").step);
     exe.linkSystemLibrary("RFFI");    
     if (exe.target.isWindows())
-        exe.linkSystemLibraryName("libleanshared.dll")
+        exe.linkSystemLibraryName("leanshared.dll")
     else
         exe.linkSystemLibrary("leanshared");
     exe.linkLibC();
