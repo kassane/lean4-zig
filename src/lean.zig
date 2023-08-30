@@ -3,16 +3,16 @@ const std = @import("std");
 const FlexibleArrayType = std.zig.c_translation.FlexibleArrayType;
 pub const __builtin_expect = std.zig.c_builtins.__builtin_expect;
 
-pub const LEAN_VERSION_MAJOR = @as(c_int, 4);
+pub const LEAN_VERSION_MAJOR = 4;
 pub const LEAN_VERSION_MINOR = 0;
 pub const LEAN_VERSION_PATCH = 0;
 pub const LEAN_VERSION_IS_RELEASE = 0;
 pub const LEAN_SPECIAL_VERSION_DESC = "nightly-2023-08-26";
 pub const LEAN_IS_STAGE0 = 0;
 
-pub const LEAN_CLOSURE_MAX_ARGS = @as(c_int, 16);
-pub const LEAN_OBJECT_SIZE_DELTA = @as(c_uint, 8);
-pub const LEAN_MAX_SMALL_OBJECT_SIZE = @as(c_int, 4096);
+pub const LEAN_CLOSURE_MAX_ARGS = 16;
+pub const LEAN_OBJECT_SIZE_DELTA = 8;
+pub const LEAN_MAX_SMALL_OBJECT_SIZE = 4096;
 
 pub inline fn LEAN_UNLIKELY(x: bool) bool {
     return __builtin_expect(@intFromBool(x), 0) != 0;
@@ -30,21 +30,21 @@ pub inline fn LEAN_BYTE(Var: anytype, Index: anytype) @TypeOf((std.zig.c_transla
     return (std.zig.c_translation.cast([*]u8, &Var) + Index).*;
 }
 
-pub const LeanMaxCtorTag = @as(u8, 244);
-pub const LeanClosure = @as(u8, 245);
-pub const LeanArray = @as(u8, 246);
-pub const LeanStructArray = @as(u8, 247);
-pub const LeanScalarArray = @as(u8, 248);
-pub const LeanString = @as(u8, 249);
-pub const LeanMPZ = @as(u8, 250);
-pub const LeanThunk = @as(u8, 251);
-pub const LeanTask = @as(u8, 252);
-pub const LeanRef = @as(u8, 253);
-pub const LeanExternal = @as(u8, 254);
-pub const LeanReserved = @as(u8, 255);
+pub const LeanMaxCtorTag = 244;
+pub const LeanClosure = 245;
+pub const LeanArray = 246;
+pub const LeanStructArray = 247;
+pub const LeanScalarArray = 248;
+pub const LeanString = 249;
+pub const LeanMPZ = 250;
+pub const LeanThunk = 251;
+pub const LeanTask = 252;
+pub const LeanRef = 253;
+pub const LeanExternal = 254;
+pub const LeanReserved = 255;
 
-pub const LEAN_MAX_CTOR_FIELDS = @as(c_uint, 256);
-pub const LEAN_MAX_CTOR_SCALARS_SIZE = @as(c_uint, 1024);
+pub const LEAN_MAX_CTOR_FIELDS = 256;
+pub const LEAN_MAX_CTOR_SCALARS_SIZE = 1024;
 
 pub fn lean_is_big_object_tag(tag: u8) callconv(.C) bool {
     return tag == 246 or tag == 247 or tag == 248 or tag == 249;
@@ -565,7 +565,7 @@ pub fn lean_array_get(def_val: lean_obj_arg, a: b_lean_obj_arg, i: b_lean_obj_ar
 }
 pub extern fn lean_copy_expand_array(a: lean_obj_arg, expand: bool) lean_obj_res;
 pub fn lean_copy_array(a: lean_obj_arg) callconv(.C) lean_obj_res {
-    return lean_copy_expand_array(a, 0 != 0);
+    return lean_copy_expand_array(a, false);
 }
 pub fn lean_ensure_exclusive_array(a: lean_obj_arg) callconv(.C) lean_obj_res {
     if (lean_is_exclusive(a)) return a;
@@ -703,7 +703,7 @@ pub fn lean_mk_empty_float_array(capacity: b_lean_obj_arg) callconv(.C) lean_obj
     if (!lean_is_scalar(capacity)) {
         lean_internal_panic_out_of_memory();
     }
-    return lean_alloc_sarray(@as(c_uint, @bitCast(@as(c_uint, @truncate(@sizeOf(f64))))), 0, lean_unbox(capacity));
+    return lean_alloc_sarray(@sizeOf(f64), 0, lean_unbox(capacity));
 }
 pub fn lean_float_array_size(a: b_lean_obj_arg) callconv(.C) lean_obj_res {
     return lean_box(lean_sarray_size(a));
@@ -816,10 +816,10 @@ pub fn lean_string_ne(s1: b_lean_obj_arg, s2: b_lean_obj_arg) callconv(.C) bool 
 }
 pub extern fn lean_string_lt(s1: b_lean_obj_arg, s2: b_lean_obj_arg) bool;
 pub fn lean_string_dec_eq(s1: b_lean_obj_arg, s2: b_lean_obj_arg) callconv(.C) u8 {
-    return @as(u8, @intFromBool(lean_string_eq(s1, s2)));
+    return @intFromBool(lean_string_eq(s1, s2));
 }
 pub fn lean_string_dec_lt(s1: b_lean_obj_arg, s2: b_lean_obj_arg) callconv(.C) u8 {
-    return @as(u8, @intFromBool(lean_string_lt(s1, s2)));
+    return @intFromBool(lean_string_lt(s1, s2));
 }
 pub extern fn lean_string_hash(b_lean_obj_arg) u64;
 pub fn lean_mk_thunk(c: lean_obj_arg) callconv(.C) lean_obj_res {
@@ -851,16 +851,16 @@ pub extern fn lean_init_task_manager_using(num_workers: c_uint) void;
 pub extern fn lean_finalize_task_manager() void;
 pub extern fn lean_task_spawn_core(c: lean_obj_arg, prio: c_uint, keep_alive: bool) lean_obj_res;
 pub fn lean_task_spawn(c: lean_obj_arg, prio: lean_obj_arg) callconv(.C) lean_obj_res {
-    return lean_task_spawn_core(c, @as(c_uint, @bitCast(@as(c_uint, @truncate(lean_unbox(prio))))), 0 != 0);
+    return lean_task_spawn_core(c, @intCast(lean_unbox(prio)), false);
 }
 pub extern fn lean_task_pure(a: lean_obj_arg) lean_obj_res;
 pub extern fn lean_task_bind_core(x: lean_obj_arg, f: lean_obj_arg, prio: c_uint, keep_alive: bool) lean_obj_res;
 pub fn lean_task_bind(x: lean_obj_arg, f: lean_obj_arg, prio: lean_obj_arg) callconv(.C) lean_obj_res {
-    return lean_task_bind_core(x, f, @as(c_uint, @bitCast(@as(c_uint, @truncate(lean_unbox(prio))))), 0 != 0);
+    return lean_task_bind_core(x, f, @intCast(lean_unbox(prio)), false);
 }
 pub extern fn lean_task_map_core(f: lean_obj_arg, t: lean_obj_arg, prio: c_uint, keep_alive: bool) lean_obj_res;
 pub fn lean_task_map(f: lean_obj_arg, t: lean_obj_arg, prio: lean_obj_arg) callconv(.C) lean_obj_res {
-    return lean_task_map_core(f, t, @as(c_uint, @bitCast(@as(c_uint, @truncate(lean_unbox(prio))))), 0 != 0);
+    return lean_task_map_core(f, t, @intCast(lean_unbox(prio)), false);
 }
 pub extern fn lean_task_get(t: b_lean_obj_arg) b_lean_obj_res;
 pub fn lean_task_get_own(t: lean_obj_arg) callconv(.C) lean_obj_res {
@@ -999,7 +999,7 @@ pub fn lean_nat_le(a1: b_lean_obj_arg, a2: b_lean_obj_arg) callconv(.C) bool {
     return false;
 }
 pub fn lean_nat_dec_le(a1: b_lean_obj_arg, a2: b_lean_obj_arg) callconv(.C) u8 {
-    return @as(u8, @intFromBool(lean_nat_le(a1, a2)));
+    return @intFromBool(lean_nat_le(a1, a2));
 }
 pub fn lean_nat_lt(a1: b_lean_obj_arg, a2: b_lean_obj_arg) callconv(.C) bool {
     if (LEAN_LIKELY(lean_is_scalar(a1) and lean_is_scalar(a2))) {
@@ -1814,7 +1814,7 @@ pub fn lean_hashset_mk_idx(sz: lean_obj_arg, hash: u64) callconv(.C) usize {
     return @bitCast(hash & (lean_unbox(sz) -% 1));
 }
 pub fn lean_expr_data(expr: lean_obj_arg) callconv(.C) u64 {
-    return lean_ctor_get_uint64(expr, @as(c_uint, @bitCast(@as(c_uint, @truncate(@as(c_ulong, @bitCast(@as(c_ulong, lean_ctor_num_objs(expr)))) *% @sizeOf(*anyopaque))))));
+    return lean_ctor_get_uint64(expr, lean_ctor_num_objs(expr) * @sizeOf(*anyopaque));
 }
 pub fn lean_get_max_ctor_fields(_: lean_obj_arg) callconv(.C) lean_obj_res {
     return lean_box(LEAN_MAX_CTOR_FIELDS);
