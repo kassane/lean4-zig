@@ -45,25 +45,14 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
     if (exe.target.isDarwin()) {
         exe.addLibraryPath(.{ .path = "/usr/local/lib" });
     }
-    exe.addIncludePath(.{
-        .path = b.pathJoin(
-            &.{
-                try lean4Prefix(b),
-                "include",
-            },
-        ),
-    });
+    const lean4_prefix = try lean4Prefix(b);
+    exe.addIncludePath(.{ .path = b.pathJoin(&.{ lean4_prefix, "include" }) });
     exe.step.dependOn(&lakeBuild(b, "examples/reverse-ffi/lib").step);
 
     // static obj
     exe.addCSourceFile(.{ .file = .{ .path = "examples/reverse-ffi/lib/build/ir/RFFI.c" }, .flags = &.{} });
-    if (exe.target.isWindows()) {
-        //exe.linkSystemLibraryName("RFFI.dll"); // not found "libRFFI.dll.a"
-        exe.linkSystemLibraryName("leanshared.dll");
-    } else {
-        // exe.linkSystemLibrary("RFFI"); // sharedlib
-        exe.linkSystemLibrary("leanshared");
-    }
+    // exe.linkSystemLibrary("RFFI"); // sharedlib
+    exe.linkSystemLibraryName("leanshared");
     exe.linkLibC();
 
     b.installArtifact(exe);
@@ -72,6 +61,9 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
     run_cmd.step.dependOn(b.getInstallStep());
     if (b.args) |args| {
         run_cmd.addArgs(args);
+    }
+    if (exe.target.isWindows()) {
+        run_cmd.addPathDir(b.pathJoin(&.{ lean4_prefix, "lib", "lean" }));
     }
     const run_step = b.step("rffi", b.fmt("Run the {s} app", .{exe.name}));
     run_step.dependOn(&run_cmd.step);
