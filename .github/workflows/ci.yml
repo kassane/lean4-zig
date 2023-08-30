@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ubuntu-latest, macos-latest]
+        runs-on: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v3
@@ -31,14 +31,14 @@ jobs:
         if: startsWith(matrix.runs-on, 'macos')
         run: sudo ln -s $HOME/.elan/lib/lean/libleanshared.dylib /usr/local/lib/
 
-      # - name: Setup elan toolchain on Windows
-      #   if: startsWith(matrix.runs-on, 'windows')
-      #   shell: pwsh
-      #   run: |
-      #     curl -O --location https://raw.githubusercontent.com/leanprover/elan/master/elan-init.ps1
-      #     .\elan-init.ps1 -NoPrompt 1 -DefaultToolchain leanprover/lean4:nightly
-      #     echo "Adding location $HOME\.elan\bin to PATH..."
-      #     echo "$HOME\.elan\bin" >> $env:GITHUB_PATH
+      - name: Setup elan toolchain on Windows
+        if: startsWith(matrix.runs-on, 'windows')
+        shell: pwsh
+        run: |
+          curl -O --location https://raw.githubusercontent.com/leanprover/elan/master/elan-init.ps1
+          .\elan-init.ps1 -NoPrompt 1 -DefaultToolchain leanprover/lean4:nightly
+          echo "Adding location $HOME\.elan\bin to PATH..."
+          echo "$HOME\.elan\bin" >> $env:GITHUB_PATH
 
       - name: Build Summary ${{ matrix.targets }}
         run: zig build --summary all -freference-trace
