@@ -40,6 +40,9 @@ jobs:
           echo "Adding location $HOME\.elan\bin to PATH..."
           echo "$HOME\.elan\bin" >> $env:GITHUB_PATH
 
+      - name: Build Test ${{ matrix.targets }}
+        run: zig build test --summary all -freference-trace
+
       - name: Build Summary ${{ matrix.targets }}
         run: zig build --summary all -freference-trace
 

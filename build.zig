@@ -10,6 +10,7 @@ pub fn build(b: *std.Build) !void {
         },
     });
     lean4FFI(b);
+    try runTest(b, target);
     try reverseFFI(b, .{ target, optimize });
 }
 
@@ -109,4 +110,28 @@ fn lean4Prefix(b: *std.Build) ![]const u8 {
     });
     var out = std.mem.split(u8, run.stdout, "\n"); // remove newline
     return out.first();
+}
+
+fn runTest(b: *std.build, target: std.zig.CrossTarget) !void {
+    const main_tests = b.addTest(.{
+        .name = "lean_test",
+        .target = target,
+        .optimize = .Debug,
+        .root_source_file = .{ .path = "src/c.zig" },
+    });
+    main_tests.addLibraryPath(.{ .path = try lean4LibDir(b) });
+
+    if (main_tests.target.isDarwin()) {
+        main_tests.addLibraryPath(.{ .path = "/usr/local/lib" });
+    }
+    if (main_tests.target.isWindows()) {
+        main_tests.linkSystemLibraryName("leanshared.dll");
+    } else {
+        main_tests.linkSystemLibrary("leanshared");
+    }
+    main_tests.linkLibC();
+    const run_main_tests = b.addRunArtifact(main_tests);
+
+    const test_step = b.step("test", "Run library tests");
+    test_step.dependOn(&run_main_tests.step);
 }
