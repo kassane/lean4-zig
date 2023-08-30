@@ -2429,7 +2429,7 @@ pub extern fn lean_dbg_sleep(ms: u32, @"fn": lean_obj_arg) ?*lean_object;
 pub extern fn lean_dbg_trace_if_shared(s: lean_obj_arg, a: lean_obj_arg) ?*lean_object;
 pub extern fn lean_decode_io_error(errnum: c_int, fname: b_lean_obj_arg) lean_obj_res;
 pub fn lean_io_mk_world() callconv(.C) lean_obj_res {
-    return lean_box(@as(usize, @bitCast(@as(c_long, @as(c_int, 0)))));
+    return lean_box(@as(usize, @intCast(0)));
 }
 pub fn lean_io_result_is_ok(arg_r: b_lean_obj_arg) callconv(.C) bool {
     var r = arg_r;
@@ -2701,6 +2701,6 @@ pub const LEAN_MIN_SMALL_INT = if (std.zig.c_translation.sizeof(?*anyopaque) == 
 pub const lean_task = struct_lean_task;
 const std = @import("std");
 
-test {
+test "semantic analyzer" {
     std.testing.refAllDecls(@This());
 }
