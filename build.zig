@@ -39,6 +39,7 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
     });
     exe.addModule("lean4", b.modules.get("lean4").?);
     exe.addLibraryPath(.{ .path = "examples/reverse-ffi/lib/build/lib" });
+    exe.addLibraryPath(.{ .path = try lean4LibDir(b) });
 
     if (exe.target.isDarwin())
         exe.addLibraryPath(.{ .path = "/usr/local/lib" });
@@ -60,7 +61,6 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
             ),
         });
     }
-    exe.addLibraryPath(.{ .path = try lean4LibDir(b) });
     exe.step.dependOn(&lakeBuild(b, "examples/reverse-ffi/lib").step);    
     if (exe.target.isWindows()) {
         exe.addCSourceFile(.{.file = .{.path = "examples/reverse-ffi/lib/build/ir/RFFI.c" }, .flags = &.{}});
