@@ -161,16 +161,10 @@ pub const lean_external_object = extern struct {
 };
 pub fn lean_is_scalar(arg_o: ?*lean_object) callconv(.C) bool {
     var o = arg_o;
-    return (@as(usize, @intCast(@intFromPtr(o))) & @as(usize, @bitCast(@as(c_long, @as(c_int, 1))))) == @as(usize, @bitCast(@as(c_long, @as(c_int, 1))));
+    return (@as(usize, @intCast(@intFromPtr(o))) & @as(usize, @intCast(1))) == @as(usize, @intCast(1));
 }
 pub fn lean_box(arg_n: usize) callconv(.C) ?*lean_object {
     var n = arg_n;
-
-    // C version
-    // return (lean_object*)(((size_t)(n) << 1) | 1);
-
-    // translate-c - error (align error)
-    //return @ptrFromInt((n << @intCast(1)) | @as(usize, @bitCast(@as(c_long, @as(c_int, 1)))));
 
     // manual fix
     var value = (n << @as(usize, 1)) | @as(usize, 1);
@@ -220,7 +214,7 @@ pub fn lean_alloc_small_object(arg_sz: c_uint) callconv(.C) ?*lean_object {
             lean_notify_assert("src/lean.zig", @as(c_int, 326), "sz <= LEAN_MAX_SMALL_OBJECT_SIZE");
         }
     }
-    return @as(?*lean_object, @ptrCast(lean_alloc_small(sz, slot_idx)));
+    return @as(?*lean_object, @ptrCast(@alignCast(lean_alloc_small(sz, slot_idx))));
 }
 pub fn lean_alloc_ctor_memory(arg_sz: c_uint) callconv(.C) ?*lean_object {
     var sz = arg_sz;
@@ -507,9 +501,9 @@ pub fn lean_set_non_heap_header(arg_o: ?*lean_object, arg_sz: usize, arg_tag: c_
         }
     }
     o.?.*.m_rc = 0;
-    o.?.*.m_tag = tag;
-    o.?.*.m_other = other;
-    o.?.*.m_cs_sz = @as(c_uint, @bitCast(@as(c_uint, @truncate(sz))));
+    o.?.*.m_tag = @intCast(tag);
+    o.?.*.m_other = @intCast(other);
+    o.?.*.m_cs_sz = @intCast(sz);
 }
 pub fn lean_set_non_heap_header_for_big(arg_o: ?*lean_object, arg_tag: c_uint, arg_other: c_uint) callconv(.C) void {
     var o = arg_o;
@@ -586,7 +580,7 @@ pub fn lean_ctor_set_tag(arg_o: b_lean_obj_arg, arg_new_tag: u8) callconv(.C) vo
             lean_notify_assert("src/lean.zig", @as(c_int, 559), "new_tag <= LeanMaxCtorTag");
         }
     }
-    o.?.*.m_tag = @as(c_uint, @bitCast(@as(c_uint, new_tag)));
+    o.?.*.m_tag = @intCast(new_tag);
 }
 pub fn lean_ctor_release(arg_o: b_lean_obj_arg, arg_i: c_uint) callconv(.C) void {
     var o = arg_o;
@@ -961,12 +955,12 @@ pub fn lean_array_set(arg_a: lean_obj_arg, arg_i: b_lean_obj_arg, arg_v: lean_ob
 pub fn lean_array_pop(arg_a: lean_obj_arg) callconv(.C) ?*lean_object {
     var a = arg_a;
     var r: ?*lean_object = lean_ensure_exclusive_array(a);
-    var sz: usize = lean_to_array(r).*.m_size;
+    var sz: usize = lean_to_array(r).?.*.m_size;
     var last: [*c]?*lean_object = undefined;
     if (sz == @as(usize, @bitCast(@as(c_long, @as(c_int, 0))))) return r;
     sz -%= 1;
     last = lean_array_cptr(r) + sz;
-    lean_to_array(r).*.m_size = sz;
+    lean_to_array(r).?.*.m_size = sz;
     lean_dec(last.*);
     return r;
 }
@@ -994,7 +988,7 @@ pub fn lean_array_swap(arg_a: lean_obj_arg, arg_i: b_lean_obj_arg, arg_j: b_lean
     if (!lean_is_scalar(i) or !lean_is_scalar(j)) return a;
     var ui: usize = lean_unbox(i);
     var uj: usize = lean_unbox(j);
-    var sz: usize = lean_to_array(a).*.m_size;
+    var sz: usize = lean_to_array(a).?.*.m_size;
     if ((ui >= sz) or (uj >= sz)) return a;
     return lean_array_uswap(a, ui, uj);
 }
@@ -1331,7 +1325,7 @@ pub fn lean_thunk_pure(arg_v: lean_obj_arg) callconv(.C) lean_obj_res {
 pub extern fn lean_thunk_get_core(t: ?*lean_object) ?*lean_object;
 pub fn lean_thunk_get(arg_t: b_lean_obj_arg) callconv(.C) b_lean_obj_res {
     var t = arg_t;
-    var r: ?*lean_object = lean_to_thunk(t).*.m_value;
+    var r: ?*lean_object = lean_to_thunk(t).?.*.m_value;
     if (r != null) return r;
     return lean_thunk_get_core(t);
 }
@@ -1509,7 +1503,7 @@ pub fn lean_nat_le(arg_a1: b_lean_obj_arg, arg_a2: b_lean_obj_arg) callconv(.C) 
     var a1 = arg_a1;
     var a2 = arg_a2;
     if (__builtin_expect(@as(c_long, @intFromBool((@as(c_int, @intFromBool(lean_is_scalar(a1))) != 0) and (@as(c_int, @intFromBool(lean_is_scalar(a2))) != 0))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 1))))) != 0) {
-        return a1 <= a2;
+        return std.meta.eql(a1, a2);
     } else {
         return lean_nat_big_le(a1, a2);
     }
@@ -1524,7 +1518,7 @@ pub fn lean_nat_lt(arg_a1: b_lean_obj_arg, arg_a2: b_lean_obj_arg) callconv(.C) 
     var a1 = arg_a1;
     var a2 = arg_a2;
     if (__builtin_expect(@as(c_long, @intFromBool((@as(c_int, @intFromBool(lean_is_scalar(a1))) != 0) and (@as(c_int, @intFromBool(lean_is_scalar(a2))) != 0))), @as(c_long, @bitCast(@as(c_long, @as(c_int, 1))))) != 0) {
-        return a1 < a2;
+        return std.meta.eql(a1, a2);
     } else {
         return lean_nat_big_lt(a1, a2);
     }
@@ -2227,9 +2221,9 @@ pub fn lean_uint64_modn(arg_a1: u64, arg_a2: b_lean_obj_arg) callconv(.C) u64 {
 pub fn lean_uint64_log2(arg_a: u64) callconv(.C) u64 {
     var a = arg_a;
     var res: u64 = 0;
-    while (a >= @as(u64, @bitCast(@as(c_long, @as(c_int, 2))))) {
+    while (a >= @as(u64, @intCast(2))) {
         res +%= 1;
-        a /= @as(u64, @bitCast(@as(c_long, @as(c_int, 2))));
+        a /= @intCast(2);
     }
     return res;
 }
@@ -2706,3 +2700,7 @@ pub const LEAN_MAX_SMALL_INT = if (std.zig.c_translation.sizeof(?*anyopaque) == 
 pub const LEAN_MIN_SMALL_INT = if (std.zig.c_translation.sizeof(?*anyopaque) == @as(c_int, 8)) std.math.maxInt(c_int) else -(@as(c_int, 1) << @as(c_int, 30));
 pub const lean_task = struct_lean_task;
 const std = @import("std");
+
+test {
+    std.testing.refAllDecls(@This());
+}
