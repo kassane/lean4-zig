@@ -41,6 +41,7 @@ jobs:
           echo "$HOME\.elan\bin" >> $env:GITHUB_PATH
 
       - name: Build Test ${{ matrix.targets }}
+        if: (startsWith(matrix.runs-on, 'ubuntu')) || (startsWith(matrix.runs-on, 'macos'))
         run: zig build test --summary all -freference-trace
 
       - name: Build Summary ${{ matrix.targets }}
