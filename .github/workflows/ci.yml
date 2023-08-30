@@ -19,7 +19,7 @@ jobs:
           version: master
       
       - name: Setup elan toolchain
-        # if: (startsWith(matrix.runs-on, 'ubuntu')) || (startsWith(matrix.runs-on, 'macos'))
+        if: (startsWith(matrix.runs-on, 'ubuntu')) || (startsWith(matrix.runs-on, 'macos'))
         run: |
           curl -O --location https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh
           chmod u+x elan-init.sh
@@ -44,10 +44,8 @@ jobs:
         if: startsWith(matrix.runs-on, 'windows')
         shell: pwsh
         run: |
-          lake --dir=$PWD\examples\reverse-ffi\lib build
-          gci -Force $PWD\examples\reverse-ffi\lib
-          gci -Force $PWD\examples\reverse-ffi\lib\build
-          gci -Force $PWD\examples\reverse-ffi\lib\build\lib
+          gci -Force $(lean --print-libdir)
+          gci -Force $(lean --print-prefix)/bin
 
       - name: Build Summary ${{ matrix.targets }}
         run: zig build --summary all -freference-trace
