@@ -48,4 +48,5 @@ jobs:
         run: zig build zffi --summary all -freference-trace
 
       - name: Running Reverse-FFI ${{ matrix.targets }}
+        if: (startsWith(matrix.runs-on, 'ubuntu')) || (startsWith(matrix.runs-on, 'macos'))
         run: zig build rffi -freference-trace
