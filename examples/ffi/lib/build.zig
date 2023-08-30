@@ -10,6 +10,7 @@ pub fn build(b: *std.build) void {
         .target = target,
         .optimize = optimize,
     });
+    lib.pie = true;
     lib.addAnonymousModule("lean4", .{ .source_file = .{ .path = "../../../src/lean.zig" } });
     switch (optimize) {
         .Debug, .ReleaseSafe => lib.bundle_compiler_rt = true,

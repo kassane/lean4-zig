@@ -350,11 +350,11 @@ pub fn lean_set_st_header(o: LeanPtr, tag: c_uint, other: c_uint) callconv(.C) v
 pub fn lean_set_non_heap_header(o: LeanPtr, sz: usize, tag: c_uint, other: c_uint) callconv(.C) void {
     assert(@src(), sz > 0, "sz > 0");
     assert(@src(), sz < (1 << 16), "sz < (1ull << 16)");
-    assert(@src(), sz == 1 or !lean_is_big_object_tag(@truncate(tag)), "sz == 1 || !lean_is_big_object_tag(tag)");
+    assert(@src(), sz == 1 or !lean_is_big_object_tag(@intCast(tag)), "sz == 1 || !lean_is_big_object_tag(tag)");
     o.m_rc = 0;
-    o.m_tag = @truncate(tag);
-    o.m_other = @truncate(other);
-    o.m_cs_sz = @truncate(sz);
+    o.m_tag = @intCast(tag);
+    o.m_other = @intCast(other);
+    o.m_cs_sz = @intCast(sz);
 }
 pub fn lean_set_non_heap_header_for_big(o: LeanPtr, tag: c_uint, other: c_uint) callconv(.C) void {
     lean_set_non_heap_header(o, 1, tag, other);
