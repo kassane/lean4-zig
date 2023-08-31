@@ -53,7 +53,7 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
     // static obj
     exe.addCSourceFile(.{ .file = .{ .path = "examples/reverse-ffi/lib/build/ir/RFFI.c" }, .flags = &.{} });
     if (exe.target.isWindows()) {
-        exe.linkSystemLibraryName("libleanshared");
+        exe.linkSystemLibraryName("leanshared.dll");
     } else {
         // exe.linkSystemLibrary("RFFI"); // sharedlib
         exe.linkSystemLibrary("leanshared");
@@ -83,10 +83,8 @@ fn lakeBuild(b: *std.Build, path: []const u8) *std.Build.Step.Run {
 }
 
 fn lean4LibDir(b: *std.Build, target: std.zig.CrossTarget, lean4_prefix: []const u8) []const u8 {
-    return if (target.isWindows())
-        b.pathJoin(&.{ lean4_prefix, "bin" })
-    else
-        b.pathJoin(&.{ lean4_prefix, "lib", "lean" });
+    // for windows/mingw need "lib.dll.a" linking
+    return b.pathJoin(&.{ lean4_prefix, "lib", "lean" });
 }
 fn lean4Prefix(b: *std.Build) ![]const u8 {
     const lean = try b.findProgram(&.{"lean"}, &.{});
@@ -115,7 +113,7 @@ fn runTest(b: *std.build, target: std.zig.CrossTarget) !void {
         main_tests.addLibraryPath(.{ .path = "/usr/local/lib" });
     }
     if (main_tests.target.isWindows()) {
-        main_tests.linkSystemLibraryName("libleanshared");
+        main_tests.linkSystemLibraryName("leanshared.dll");
     } else {
         main_tests.linkSystemLibrary("leanshared");
     }
