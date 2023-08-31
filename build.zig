@@ -41,7 +41,7 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
     exe.addModule("lean4", b.modules.get("lean4").?);
     exe.addLibraryPath(.{ .path = "examples/reverse-ffi/lib/build/lib" });
     const lean4_prefix = try lean4Prefix(b);
-    const lib_dir = lean4LibDir(b, lean4_prefix);
+    const lib_dir = lean4LibDir(b, exe.target, lean4_prefix);
     exe.addLibraryPath(.{ .path = lib_dir });
 
     if (exe.target.isDarwin()) {
@@ -82,8 +82,8 @@ fn lakeBuild(b: *std.Build, path: []const u8) *std.Build.Step.Run {
     return run;
 }
 
-fn lean4LibDir(b: *std.Build, lean4_prefix: []const u8) []const u8 {
-    return if (b.target.isWindows())
+fn lean4LibDir(b: *std.Build, target: std.zig.CrossTarget, lean4_prefix: []const u8) []const u8 {
+    return if (target.isWindows())
         b.pathJoin(&.{ lean4_prefix, "bin" })
     else
         b.pathJoin(&.{ lean4_prefix, "lib", "lean" });
@@ -108,7 +108,7 @@ fn runTest(b: *std.build, target: std.zig.CrossTarget) !void {
         .optimize = .Debug,
         .root_source_file = .{ .path = "src/c.zig" },
     });
-    const lib_dir = lean4LibDir(b, try lean4Prefix(b));
+    const lib_dir = lean4LibDir(b, target, try lean4Prefix(b));
     main_tests.addLibraryPath(.{ .path = lib_dir });
 
     if (main_tests.target.isDarwin()) {
