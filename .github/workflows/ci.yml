@@ -39,12 +39,13 @@ jobs:
           .\elan-init.ps1 -NoPrompt 1 -DefaultToolchain leanprover/lean4:nightly
           echo "Adding location $HOME\.elan\bin to PATH..."
           echo "$HOME\.elan\bin" >> $env:GITHUB_PATH
-          echo "$(lean --print-prefix)\bin" >> $env:GITHUB_PATH
 
-      - name: powershell libPath
+      - name: powershell envPath - Lean toolchain
         if: startsWith(matrix.runs-on, 'windows')
         shell: pwsh
-        run: $env:PATH += ";$(lean --print-prefix)\bin"
+        run: |
+          echo "$(lean --print-prefix)\bin" >> $env:GITHUB_PATH
+          $env:PATH += ";$(lean --print-prefix)\bin"
 
       - name: Build Test ${{ matrix.targets }}
         run: zig build test --summary all -freference-trace
