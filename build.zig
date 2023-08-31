@@ -52,8 +52,12 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
 
     // static obj
     exe.addCSourceFile(.{ .file = .{ .path = "examples/reverse-ffi/lib/build/ir/RFFI.c" }, .flags = &.{} });
-    // exe.linkSystemLibrary("RFFI"); // sharedlib
-    exe.linkSystemLibraryName("leanshared");
+    if (exe.target.isWindows()) {
+        exe.linkSystemLibraryName("libleanshared.dll");
+    } else {
+        // exe.linkSystemLibrary("RFFI"); // sharedlib
+        exe.linkSystemLibraryName("leanshared");
+    }
     exe.linkLibC();
 
     b.installArtifact(exe);
@@ -110,7 +114,11 @@ fn runTest(b: *std.build, target: std.zig.CrossTarget) !void {
     if (main_tests.target.isDarwin()) {
         main_tests.addLibraryPath(.{ .path = "/usr/local/lib" });
     }
-    main_tests.linkSystemLibraryName("leanshared");
+    if (main_tests.target.isWindows()) {
+        main_tests.linkSystemLibraryName("libleanshared.dll");
+    } else {
+        main_tests.linkSystemLibraryName("leanshared");
+    }
     main_tests.linkLibC();
     const run_main_tests = b.addRunArtifact(main_tests);
     if (main_tests.target.isWindows()) run_main_tests.addPathDir(lib_dir);
