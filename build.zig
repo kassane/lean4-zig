@@ -115,9 +115,9 @@ fn runTest(b: *std.build, target: std.zig.CrossTarget) !void {
         main_tests.addLibraryPath(.{ .path = "/usr/local/lib" });
     }
     if (main_tests.target.isWindows()) {
-        main_tests.linkSystemLibraryName("libleanshared.dll");
+        main_tests.linkSystemLibraryName("libleanshared");
     } else {
-        main_tests.linkSystemLibraryName("leanshared");
+        main_tests.linkSystemLibrary("leanshared");
     }
     main_tests.linkLibC();
     const run_main_tests = b.addRunArtifact(main_tests);
