@@ -53,7 +53,7 @@ fn reverseFFI(b: *std.Build, info: struct { std.zig.CrossTarget, std.builtin.Opt
     // static obj
     exe.addCSourceFile(.{ .file = .{ .path = "examples/reverse-ffi/lib/build/ir/RFFI.c" }, .flags = &.{} });
     if (exe.target.isWindows()) {
-        exe.linkSystemLibraryName("leanshared.dll");
+        exe.linkSystemLibraryName("libleanshared");
     } else {
         // exe.linkSystemLibrary("RFFI"); // sharedlib
         exe.linkSystemLibrary("leanshared");
