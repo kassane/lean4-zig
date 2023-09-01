@@ -16,5 +16,11 @@ pub fn build(b: *std.build) void {
         .Debug, .ReleaseSafe => lib.bundle_compiler_rt = true,
         else => lib.strip = true,
     }
-    b.installArtifact(lib);
+    const libname = switch (target.getAbi()) {
+        .msvc => b.fmt("{s}.lib", .{lib.name}),
+        else => b.fmt("lib{s}.a", .{lib.name}),
+    };
+    const lib_install = b.addInstallFileWithDir(lib.getOutputSource(), .lib, libname);
+    lib_install.step.dependOn(&lib.step);
+    b.getInstallStep().dependOn(&lib_install.step);
 }
