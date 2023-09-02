@@ -77,8 +77,8 @@ fn reverseFFI(b: *std.Build, info: BuildInfo) !void {
             // detect library w/ pkg-config
             exe.linkSystemLibrary("leanshared");
         }
+        exe.linkLibC();
     }
-    exe.linkLibC();
 
     b.installArtifact(exe);
 
