@@ -6,8 +6,8 @@ Functions and comments manually translated from those in the [`lean.h` header](h
 
 ### Required
 
-- [zig](https://ziglang.org/download/) v0.11.0 or master
-- [lean4](https://leanprover.github.io/download/) v4.0.0-rc or nightly
+- [zig](https://ziglang.org/download/) v0.12.0 or master
+- [lean4](https://leanprover.github.io/download/) v4.4.0 or nightly
 
 
 ### How to run

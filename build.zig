@@ -7,7 +7,7 @@ pub fn build(b: *std.Build) !void {
     const shared = b.option(bool, "Shared", "Linking with libleanshared [default: true]") orelse true;
 
     _ = b.addModule("lean4", .{
-        .source_file = .{
+        .root_source_file = .{
             .path = "src/c.zig",
         },
     });
@@ -32,7 +32,7 @@ fn lean4FFI(b: *std.Build) void {
         "update",
     });
     const run = b.addSystemCommand(&.{
-        "examples/ffi/app/build/bin/app",
+        "examples/ffi/app/.lake/build/bin/app",
     });
     lakebuild.step.dependOn(&update.step);
     run.step.dependOn(&lakebuild.step);
@@ -47,22 +47,22 @@ fn reverseFFI(b: *std.Build, info: BuildInfo) !void {
         .target = info.target,
         .optimize = info.optimize,
     });
-    exe.addModule("lean4", b.modules.get("lean4").?);
+    exe.root_module.addImport("lean4", b.modules.get("lean4").?);
     exe.addLibraryPath(.{ .path = "examples/reverse-ffi/lib/build/lib" });
     const lean4_prefix = try lean4Prefix(b);
     const lib_dir = lean4LibDir(b, lean4_prefix);
     exe.addLibraryPath(.{ .path = lib_dir });
 
-    if (exe.target.isDarwin()) {
+    if (exe.rootModuleTarget().isDarwin()) {
         exe.addLibraryPath(.{ .path = "/usr/local/lib" });
     }
     exe.addIncludePath(.{ .path = b.pathJoin(&.{ lean4_prefix, "include" }) });
     exe.step.dependOn(&lakeBuild(b, "examples/reverse-ffi/lib").step);
 
     // static obj
-    exe.addCSourceFile(.{ .file = .{ .path = "examples/reverse-ffi/lib/build/ir/RFFI.c" }, .flags = &.{} });
+    exe.addCSourceFile(.{ .file = .{ .path = "examples/reverse-ffi/lib/.lake/build/ir/RFFI.c" }, .flags = &.{} });
 
-    if (exe.target.isLinux() and info.linkage == .static) {
+    if (exe.rootModuleTarget().os.tag == .linux and info.linkage == .static) {
         exe.linkSystemLibrary("leancpp");
         exe.linkSystemLibrary("leanrt");
         exe.linkSystemLibrary("Init");
@@ -70,9 +70,9 @@ fn reverseFFI(b: *std.Build, info: BuildInfo) !void {
         exe.linkSystemLibrary("gmp");
         exe.linkLibCpp(); // libc++ + libunwind + libc
     } else {
-        if (exe.target.isWindows()) {
+        if (exe.rootModuleTarget().os.tag == .windows) {
             // search library name - no pkg-config
-            exe.linkSystemLibraryName("leanshared.dll");
+            exe.linkSystemLibrary2("leanshared.dll", .{ .use_pkg_config = .no });
         } else {
             // detect library w/ pkg-config
             exe.linkSystemLibrary("leanshared");
@@ -87,7 +87,8 @@ fn reverseFFI(b: *std.Build, info: BuildInfo) !void {
     if (b.args) |args| {
         run_cmd.addArgs(args);
     }
-    if (exe.target.isWindows()) run_cmd.addPathDir(lib_dir);
+    if (exe.rootModuleTarget().os.tag == .windows)
+        run_cmd.addPathDir(lib_dir);
     const run_step = b.step("rffi", b.fmt("Run the {s} app", .{exe.name}));
     run_step.dependOn(&run_cmd.step);
 }
@@ -108,18 +109,18 @@ fn lean4LibDir(b: *std.Build, lean4_prefix: []const u8) []const u8 {
 }
 fn lean4Prefix(b: *std.Build) ![]const u8 {
     const lean = try b.findProgram(&.{"lean"}, &.{});
-    const run = try std.ChildProcess.exec(.{
+    const run = try std.ChildProcess.run(.{
         .allocator = b.allocator,
         .argv = &.{
             lean,
             "--print-prefix",
         },
     });
-    var out = std.mem.split(u8, run.stdout, "\n"); // remove newline
+    var out = std.mem.splitSequence(u8, run.stdout, "\n"); // remove newline
     return out.first();
 }
 
-fn runTest(b: *std.build, target: std.zig.CrossTarget) !void {
+fn runTest(b: *std.Build, target: std.Build.ResolvedTarget) !void {
     const libTests = b.addTest(.{
         .name = "lean_test",
         .target = target,
@@ -129,17 +130,18 @@ fn runTest(b: *std.build, target: std.zig.CrossTarget) !void {
     const lib_dir = lean4LibDir(b, try lean4Prefix(b));
     libTests.addLibraryPath(.{ .path = lib_dir });
 
-    if (libTests.target.isDarwin()) {
+    if (libTests.rootModuleTarget().isDarwin()) {
         libTests.addLibraryPath(.{ .path = "/usr/local/lib" });
     }
-    if (libTests.target.isWindows()) {
-        libTests.linkSystemLibraryName("leanshared.dll");
+    if (libTests.rootModuleTarget().os.tag == .windows) {
+        libTests.linkSystemLibrary2("leanshared.dll", .{ .use_pkg_config = .no });
     } else {
         libTests.linkSystemLibrary("leanshared");
     }
     libTests.linkLibC();
     const run_libTests = b.addRunArtifact(libTests);
-    if (libTests.target.isWindows()) run_libTests.addPathDir(lib_dir);
+    if (libTests.rootModuleTarget().os.tag == .windows)
+        run_libTests.addPathDir(lib_dir);
 
     const test_step = b.step("test", "Run library tests");
     test_step.dependOn(&run_libTests.step);
@@ -147,6 +149,6 @@ fn runTest(b: *std.build, target: std.zig.CrossTarget) !void {
 
 const BuildInfo = struct {
     linkage: std.Build.Step.Compile.Linkage,
-    target: std.zig.CrossTarget,
+    target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
 };

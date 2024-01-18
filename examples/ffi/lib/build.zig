@@ -1,6 +1,6 @@
 const std = @import("std");
 
-pub fn build(b: *std.build) void {
+pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
@@ -11,21 +11,23 @@ pub fn build(b: *std.build) void {
         .optimize = optimize,
     });
     lib.pie = true;
-    lib.addAnonymousModule("lean4", .{ .source_file = .{ .path = "../../../src/lean.zig" } });
+    lib.root_module.addAnonymousImport("lean4", .{
+        .root_source_file = .{
+            .path = "../../../src/c.zig",
+        },
+    });
     switch (optimize) {
         .Debug, .ReleaseSafe => lib.bundle_compiler_rt = true,
-        else => lib.strip = true,
+        else => lib.root_module.strip = true,
     }
-    const libname = switch (target.getAbi()) {
+    const libname = switch (lib.rootModuleTarget().abi) {
         .msvc => b.fmt("{s}.lib", .{lib.name}),
-        else => if (isMinGW(target)) b.fmt("{s}.a", .{lib.name}) else b.fmt("lib{s}.a", .{lib.name}),
+        else => if (lib.rootModuleTarget().isMinGW())
+            b.fmt("{s}.a", .{lib.name})
+        else
+            b.fmt("lib{s}.a", .{lib.name}),
     };
-    const lib_install = b.addInstallFileWithDir(lib.getOutputSource(), .lib, libname);
+    const lib_install = b.addInstallFileWithDir(lib.getEmittedBin(), .lib, libname);
     lib_install.step.dependOn(&lib.step);
     b.getInstallStep().dependOn(&lib_install.step);
-}
-
-fn isMinGW(getTarget: std.zig.CrossTarget) bool {
-    const target = (std.zig.system.NativeTargetInfo.detect(getTarget) catch unreachable).target;
-    return if (target.isMinGW()) true else false;
 }
